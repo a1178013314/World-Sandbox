@@ -1,0 +1,17 @@
+packages:
+  - apps/*
+  - packages/*
+
+# pnpm 11 的构建脚本授权表：true = 执行，false = 明确跳过（跳过不再算错）
+allowBuilds:
+  "@scarf/scarf": false
+  "@swc/core": true
+  "@tailwindcss/oxide": true
+  better-sqlite3: true
+  esbuild: true
+  unrs-resolver: true
+
+# 供应链策略：上述版本是本次 install 时才发布的新包，需显式豁免最短发布时长
+minimumReleaseAgeExclude:
+  - "@nestjs/cli@12.0.9"
+  - react-router@8.5.0

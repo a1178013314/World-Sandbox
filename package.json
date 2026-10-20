@@ -1,29 +1,27 @@
 {
-  "name": "legledger",
+  "name": "initial-framework-scaffolding-spec",
+  "version": "0.1.0",
   "private": true,
-  "version": "0.0.0",
-  "type": "module",
+  "description": "pnpm monorepo 初始骨架：NestJS admin + Vite React web + 共享 logger/shared 包",
+  "packageManager": "pnpm@11.13.0",
   "engines": {
-    "node": ">=22.12"
+    "node": ">=22.12.0"
   },
   "scripts": {
-    "dev": "vite",
-    "build": "tsc --noEmit && vite build",
-    "preview": "vite preview",
-    "typecheck": "tsc --noEmit",
-    "test": "vitest run",
-    "test:watch": "vitest",
+    "build": "pnpm -r build",
+    "build:packages": "pnpm --filter @ifss/logger --filter @ifss/shared build",
+    "typecheck": "pnpm run build:packages && pnpm -r typecheck",
+    "test": "pnpm run build:packages && pnpm -r test",
     "lint": "biome check .",
     "lint:fix": "biome check --write .",
-    "verify": "npm run lint && npm run typecheck && npm run test && npm run build"
+    "verify": "pnpm run lint && pnpm run typecheck && pnpm run test && pnpm run build",
+    "dev": "pnpm run build:packages && pnpm -r --parallel dev",
+    "dev:admin": "pnpm run build:packages && pnpm --filter @ifss/admin dev",
+    "dev:web": "pnpm run build:packages && pnpm --filter @ifss/web dev"
   },
-  "dependencies": {},
   "devDependencies": {
     "@biomejs/biome": "^2.5.15",
-    "@types/node": "^26.6.5",
-    "happy-dom": "^21.0.3",
-    "typescript": "~5.9.3",
-    "vite": "^8.3.4",
-    "vitest": "^5.0.5"
+    "@ifss/typescript-config": "workspace:*",
+    "typescript": "^5.9.3"
   }
 }

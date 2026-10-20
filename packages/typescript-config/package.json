@@ -1,0 +1,12 @@
+{
+  "name": "@ifss/typescript-config",
+  "version": "0.1.0",
+  "private": true,
+  "description": "全仓共享 tsconfig 基座",
+  "files": [
+    "base.json"
+  ],
+  "exports": {
+    "./base.json": "./base.json"
+  }
+}
