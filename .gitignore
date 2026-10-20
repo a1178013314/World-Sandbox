@@ -1,0 +1,11 @@
+node_modules/
+dist/
+
+# 本地环境变量（AMAP_KEY 等只在构建期抓数用）
+.env
+.env.*
+!.env.example
+
+.DS_Store
+*.local
+*.log
