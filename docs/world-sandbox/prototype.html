@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<title>假如 · 世界沙盘</title>
+<style>
+  :root{
+    --bg:#0a0b0d;
+    --panel:#121418;
+    --panel-2:#16191e;
+    --line:#23262d;
+    --line-soft:#1c1f25;
+    --text:#eae7e1;
+    --muted:#8d9099;
+    --dim:#5b606a;
+    --amber:#e2b264;
+    --coral:#e0765f;
+    --teal:#5fb8a8;
+    --blue:#7c9fc9;
+    --serif:"Songti SC","STSong","Noto Serif SC",serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{width:1600px;height:1000px;overflow:hidden}
+  body{
+    background:
+      radial-gradient(900px 500px at 12% -8%, rgba(226,178,100,.07), transparent 60%),
+      radial-gradient(700px 420px at 95% 105%, rgba(95,184,168,.05), transparent 60%),
+      var(--bg);
+    color:var(--text);
+    font-family:-apple-system,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+    -webkit-font-smoothing:antialiased;
+    letter-spacing:.1px;
+  }
+  .shell{display:flex;flex-direction:column;height:100%;padding:14px 18px 18px}
+
+  /* ---------- top bar ---------- */
+  .topbar{display:flex;align-items:center;justify-content:space-between;height:52px;flex:0 0 52px}
+  .brand{display:flex;align-items:center;gap:14px}
+  .mark{display:grid;grid-template-columns:11px 11px;grid-template-rows:11px 11px;gap:3px}
+  .mark i{display:block;border:1px solid #4a4f58;border-radius:2px}
+  .mark i:nth-child(1){background:var(--amber);border-color:var(--amber)}
+  .mark i:nth-child(4){border-color:#3a3f47}
+  .wordmark{display:flex;align-items:baseline;gap:8px;font-size:19px;font-weight:600;letter-spacing:3px}
+  .wordmark span{font-size:9px;letter-spacing:2.4px;color:var(--dim);font-weight:500}
+  .scene{display:flex;align-items:center;gap:9px;margin-left:8px;padding:7px 12px;border:1px solid var(--line);border-radius:999px;background:rgba(255,255,255,.02);font-size:12.5px;color:#cfccc5}
+  .scene .pulse{width:6px;height:6px;border-radius:50%;background:var(--teal);box-shadow:0 0 0 3px rgba(95,184,168,.13)}
+  .scene .seed{color:var(--dim);border-left:1px solid var(--line);padding-left:9px;margin-left:2px;font-size:11.5px}
+  .top-right{display:flex;align-items:center;gap:20px}
+  .stat{display:flex;flex-direction:column;align-items:flex-end;gap:2px}
+  .stat b{font-size:14px;font-weight:600;font-variant-numeric:tabular-nums}
+  .stat span{font-size:10px;color:var(--dim);letter-spacing:1.4px}
+  .mode{display:flex;align-items:center;gap:6px;padding:6px 10px;border:1px solid var(--line);border-radius:6px;font-size:11px;color:var(--muted);background:rgba(255,255,255,.02)}
+  .mode i{width:5px;height:5px;background:var(--amber);border-radius:50%}
+  .me{width:28px;height:28px;border-radius:50%;background:#22262c;border:1px solid #30343b;display:grid;place-items:center;font-size:11px;color:#b9bcc3}
+
+  /* ---------- layout ---------- */
+  .main{display:grid;grid-template-columns:288px minmax(0,1fr) 336px;gap:14px;flex:1;min-height:0;padding-top:12px}
+  .panel{background:var(--panel);border:1px solid var(--line-soft);border-radius:10px;overflow:hidden}
+  .panel-head{display:flex;align-items:center;justify-content:space-between;padding:14px 15px 12px}
+  .panel-head h3{font-size:12px;font-weight:600;letter-spacing:2px;color:#d6d3cc}
+  .panel-head .sub{font-size:10.5px;color:var(--dim);letter-spacing:.6px}
+
+  /* ---------- cast ---------- */
+  .cast{display:flex;flex-direction:column;min-height:0}
+  .cast-list{padding:0 9px 10px;display:flex;flex-direction:column;gap:5px;overflow:hidden}
+  .cast-card{display:flex;align-items:center;gap:10px;padding:9px 8px;border-radius:8px;border:1px solid transparent;transition:.15s}
+  .cast-card:hover{background:var(--panel-2);border-color:var(--line)}
+  .cast-card.sel{background:var(--panel-2);border-color:#2f333b}
+  .avatar{position:relative;flex:0 0 32px;width:32px;height:32px;border-radius:9px;display:grid;place-items:center;font-size:12.5px;font-weight:600;color:#0d0e10;background:var(--c,#7c9fc9)}
+  .avatar.ring::after{content:"";position:absolute;inset:-3px;border:1px solid var(--c);border-radius:12px;opacity:.28}
+  .cast-main{min-width:0;flex:1}
+  .cast-line1{display:flex;align-items:center;gap:6px}
+  .cast-line1 b{font-size:12.5px;font-weight:600;white-space:nowrap}
+  .role{font-size:10px;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .cast-line2{display:flex;align-items:center;justify-content:space-between;margin-top:4px;font-size:10.5px;color:var(--muted)}
+  .stance{display:flex;align-items:center;gap:4px}
+  .stance i{width:4px;height:4px;border-radius:50%;background:var(--c)}
+  .meter{height:2px;border-radius:2px;background:#22252b;margin-top:6px;overflow:hidden}
+  .meter i{display:block;height:100%;background:var(--c);opacity:.75}
+  .tag-state{font-size:9.5px;padding:2px 5px;border-radius:3px;border:1px solid var(--line);color:var(--dim);white-space:nowrap}
+  .tag-state.live{color:var(--teal);border-color:rgba(95,184,168,.28);background:rgba(95,184,168,.06)}
+  .tag-state.left{color:var(--coral);border-color:rgba(224,118,95,.25);background:rgba(224,118,95,.06)}
+  .cast-foot{margin-top:auto;padding:11px 16px;border-top:1px solid var(--line-soft);font-size:10.5px;color:var(--dim);display:flex;justify-content:space-between}
+
+  /* ---------- stage ---------- */
+  .stage{display:flex;flex-direction:column;min-height:0;background:var(--panel);border:1px solid var(--line-soft);border-radius:10px;overflow:hidden}
+  .stage-head{display:flex;align-items:center;justify-content:space-between;padding:13px 18px;border-bottom:1px solid var(--line-soft);flex:0 0 auto}
+  .stage-title{display:flex;align-items:center;gap:10px}
+  .stage-title b{font-size:14px;font-weight:600;letter-spacing:.3px}
+  .stage-title span{font-size:11px;color:var(--dim)}
+  .rounds{display:flex;align-items:center;gap:11px}
+  .round-label{font-size:10.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+  .ticks{display:flex;align-items:center;gap:5px}
+  .tick{width:16px;height:3px;border-radius:2px;background:#262a31}
+  .tick.on{background:var(--amber)}
+  .tick.now{width:22px;height:6px;border-radius:3px;background:var(--amber);box-shadow:0 0 12px rgba(226,178,100,.45)}
+  .play{width:26px;height:26px;border-radius:50%;border:1px solid var(--line);display:grid;place-items:center;margin-left:4px}
+  .play svg{opacity:.7}
+
+  .chat{flex:1;min-height:0;padding:12px 20px 6px;overflow:hidden;position:relative}
+  .round-div{display:flex;align-items:center;gap:10px;margin:3px 0 11px}
+  .round-div .label{font-size:9.5px;letter-spacing:1.6px;color:var(--dim);white-space:nowrap}
+  .round-div .rule{height:1px;flex:1;background:linear-gradient(90deg,var(--line),transparent)}
+  .round-div .meta{font-size:9.5px;color:var(--dim);font-variant-numeric:tabular-nums}
+
+  .msg{display:flex;gap:10px;margin-bottom:11px;align-items:flex-start;position:relative}
+  .msg .avatar{flex:0 0 30px;width:30px;height:30px;border-radius:8px;font-size:12px}
+  .bubble{min-width:0;max-width:83%}
+  .msg-head{display:flex;align-items:center;gap:7px;margin-bottom:3px}
+  .msg-head b{font-size:11.5px;font-weight:600;color:#dcd9d3}
+  .msg-head .who{font-size:9.5px;color:var(--dim);padding:1px 5px;border:1px solid var(--line);border-radius:3px}
+  .msg-head time{font-size:9.5px;color:#4f545d;font-variant-numeric:tabular-nums}
+  .text{font-size:12.8px;line-height:1.58;color:#cfccc6;background:var(--panel-2);border:1px solid var(--line-soft);padding:8px 12px;border-radius:3px 10px 10px 10px}
+  .text.hot{border-color:rgba(224,118,95,.22);background:linear-gradient(180deg,rgba(224,118,95,.055),rgba(224,118,95,.02))}
+  .text.law{border-color:rgba(124,159,201,.22);background:linear-gradient(180deg,rgba(124,159,201,.05),transparent)}
+  .text.quote{font-family:var(--serif);font-size:13.5px;letter-spacing:.4px}
+  .reply{display:flex;align-items:center;gap:8px;margin-top:5px;font-size:9.5px;color:var(--dim)}
+  .reply i{width:3px;height:3px;border-radius:50%;background:#3b4049}
+  .ghost{display:flex;align-items:center;gap:10px;margin:0 0 14px 40px;font-size:10px;color:#4d525b}
+  .ghost .dash{flex:1;border-top:1px dashed #242830}
+  .sys{display:flex;align-items:center;justify-content:center;gap:8px;margin:2px 0 14px;font-size:10px;color:var(--dim)}
+  .sys .pill{padding:4px 9px;border:1px solid var(--line);border-radius:999px;background:rgba(255,255,255,.015)}
+  .sys .pill b{color:#b9b6b0;font-weight:500}
+  .sys .pill.god{border-color:rgba(226,178,100,.25);background:rgba(226,178,100,.06);color:#c8a86e}
+
+  /* ---------- emerge ---------- */
+  .emerge{flex:0 0 auto;border-top:1px solid var(--line-soft);padding:9px 18px 11px;background:linear-gradient(180deg,rgba(255,255,255,.012),transparent)}
+  .emerge-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:9px}
+  .emerge-head b{font-size:10.5px;letter-spacing:1.6px;color:#a9a6a0;font-weight:600}
+  .emerge-head span{font-size:9.5px;color:var(--dim)}
+  .emerge-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+  .ec{display:flex;gap:8px;padding:7px 9px;border:1px solid var(--line-soft);border-radius:7px;background:rgba(255,255,255,.015)}
+  .ec .idx{font-size:9px;color:var(--amber);font-variant-numeric:tabular-nums;padding-top:1px}
+  .ec p{font-size:10.5px;line-height:1.5;color:#a9a7a2}
+  .ec p b{color:#d8d5cf;font-weight:600}
+
+  /* ---------- control ---------- */
+  .control{display:flex;flex-direction:column;gap:12px;min-height:0}
+  .god{padding:0 0 10px}
+  .god .panel-head{padding-bottom:10px}
+  .live{display:flex;align-items:center;gap:5px;font-size:9.5px;color:var(--teal)}
+  .live i{width:5px;height:5px;border-radius:50%;background:var(--teal);box-shadow:0 0 0 3px rgba(95,184,168,.12)}
+  .inject{padding:0 14px}
+  .field{display:flex;align-items:center;gap:8px;height:38px;padding:0 11px;border:1px solid #2b2f37;border-radius:7px;background:#0e1013}
+  .field span{font-size:12px;color:#5f646d}
+  .field .caret{width:1px;height:14px;background:var(--amber);animation:blink 1.4s infinite}
+  @keyframes blink{0%,45%{opacity:1}55%,100%{opacity:0}}
+  .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}
+  .chip{font-size:10px;color:#a3a19c;padding:5px 8px;border:1px solid var(--line);border-radius:5px;background:rgba(255,255,255,.02)}
+  .chip.hi{color:#c9a86f;border-color:rgba(226,178,100,.28);background:rgba(226,178,100,.06)}
+  .btns{display:flex;gap:7px;margin-top:12px}
+  .btn{font-size:11.5px;font-weight:600;letter-spacing:.5px;padding:9px 12px;border-radius:6px;border:1px solid var(--line);background:#1a1d22;color:#cfccc6;display:flex;align-items:center;justify-content:center;gap:7px}
+  .btn.primary{flex:1;background:var(--amber);border-color:var(--amber);color:#191307}
+  .btn.primary kbd{font-family:inherit;font-size:9px;padding:2px 4px;border-radius:3px;background:rgba(0,0,0,.14);color:#4a3818}
+  .btn.ghost{background:transparent;color:#8d9099}
+  .btn.small{font-size:10.5px;padding:7px 9px;font-weight:500}
+  .btns.split{display:grid;grid-template-columns:1.25fr 1fr}
+  .hint{margin:7px 2px 0;font-size:9.5px;line-height:1.5;color:#4f545d}
+
+  .stats{padding-bottom:8px}
+  .temp{display:flex;align-items:flex-end;justify-content:space-between;padding:2px 16px 6px}
+  .temp .num{font-size:34px;line-height:1;font-weight:300;letter-spacing:-1px;color:var(--amber);font-variant-numeric:tabular-nums}
+  .temp .num small{font-size:12px;color:#7d6a49;margin-left:3px;letter-spacing:0}
+  .temp .cap{text-align:right;font-size:9.5px;color:var(--dim);line-height:1.6}
+  .temp .cap b{display:block;color:#bfbcb5;font-weight:500;font-size:10.5px}
+  .spark{padding:0 16px 4px}
+  .rows{padding:8px 16px 0;display:flex;flex-direction:column;gap:6px}
+  .row{display:flex;align-items:center;justify-content:space-between;font-size:10.5px;color:#8d9099}
+  .row b{color:#d3d0ca;font-weight:500;font-variant-numeric:tabular-nums}
+  .bar{flex:1;height:2px;margin:0 10px;background:#23262c;border-radius:2px;overflow:hidden}
+  .bar i{display:block;height:100%;background:#5b616b}
+  .bar i.warn{background:var(--coral)}
+
+  .scene-card{flex:1;display:flex;flex-direction:column;min-height:0}
+  .quote-big{padding:0 16px 6px;font-family:var(--serif);font-size:14.5px;line-height:1.62;color:#ded9cf;letter-spacing:.3px}
+  .quote-big em{font-style:normal;color:var(--blue)}
+  .scene-meta{padding:0 16px;font-size:9.5px;color:var(--dim);display:flex;align-items:center;gap:6px}
+  .scene-meta i{width:3px;height:3px;border-radius:50%;background:#3b4049}
+  .forecast{margin:10px 14px 0;padding:9px 11px;border:1px solid rgba(226,178,100,.18);border-radius:7px;background:rgba(226,178,100,.045)}
+  .forecast .top{display:flex;align-items:center;justify-content:space-between;font-size:9.5px;color:#9a8a6c;letter-spacing:.6px}
+  .forecast .top b{color:var(--amber);font-size:14px;font-weight:600;font-variant-numeric:tabular-nums}
+  .forecast p{margin-top:5px;font-size:10.5px;line-height:1.5;color:#a8a49b}
+  .interview{margin:9px 14px 0;padding:9px 11px 9px;border:1px solid var(--line-soft);border-radius:7px;background:rgba(255,255,255,.018)}
+  .interview-top{display:flex;align-items:center;justify-content:space-between;font-size:9.5px;color:var(--dim);letter-spacing:.5px}
+  .interview-top .dot{width:4px;height:4px;border-radius:50%;background:var(--blue);opacity:.8}
+  .interview-row{display:flex;align-items:center;gap:9px;margin-top:9px}
+  .iv-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+  .iv-main b{font-size:11.5px;font-weight:600;color:#d9d6d0}
+  .iv-main span{font-size:9.5px;color:var(--dim)}
+  .iv-btn{font-size:10px;color:var(--blue);border:1px solid rgba(124,159,201,.25);background:rgba(124,159,201,.07);padding:5px 8px;border-radius:5px;white-space:nowrap}
+
+  .fork{margin:8px 14px 0;padding:9px 11px;border:1px dashed #2a2d34;border-radius:7px}
+  .fork-head{display:flex;align-items:center;justify-content:space-between;font-size:9.5px;color:var(--dim);letter-spacing:.5px}
+  .fork-head span{font-size:9px;color:#4d525b}
+  .fork-row{display:flex;align-items:center;gap:8px;margin-top:6px;font-size:10px;color:#8d9099}
+  .fork-row .k{width:78px;white-space:nowrap}
+  .fork-row .b{flex:1;height:3px;border-radius:2px;background:#22252b;overflow:hidden}
+  .fork-row .b i{display:block;height:100%;background:#6b7280}
+  .fork-row .b i.alt{background:var(--amber);opacity:.85}
+  .fork-row b{width:26px;text-align:right;font-weight:500;color:#cfccc6;font-variant-numeric:tabular-nums}
+
+  .proto-foot{display:flex;align-items:center;justify-content:space-between;font-size:9px;color:#41454d;letter-spacing:1px;padding:0 4px}
+
+  .num{font-variant-numeric:tabular-nums}
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <!-- top -->
+  <header class="topbar">
+    <div class="brand">
+      <div class="mark"><i></i><i></i><i></i><i></i></div>
+      <div class="wordmark">假如 <span>WHAT IF</span></div>
+      <div class="scene">
+        <span class="pulse"></span>翠湖花园 · 1 栋业主群
+        <span class="seed">种子：1 份物业通知</span>
+      </div>
+    </div>
+    <div class="top-right">
+      <div class="stat"><b>12</b><span>角色</span></div>
+      <div class="stat"><b>3 / 8</b><span>轮次</span></div>
+      <div class="stat"><b>6h</b><span>模拟时间</span></div>
+      <div class="mode"><i></i>回放模式</div>
+      <div class="me">A</div>
+    </div>
+  </header>
+
+  <div class="main">
+
+    <!-- cast -->
+    <aside class="panel cast">
+      <div class="panel-head">
+        <h3>角色表</h3>
+        <span class="sub">按影响力排序</span>
+      </div>
+      <div class="cast-list">
+
+        <div class="cast-card sel" style="--c:var(--coral)">
+          <div class="avatar ring">王</div>
+          <div class="cast-main">
+            <div class="cast-line1"><b>王阿姨</b><span class="role">退休 · 12 年业主</span></div>
+            <div class="cast-line2"><span class="stance"><i></i>反对涨价</span><span>86</span></div>
+            <div class="meter"><i style="width:86%"></i></div>
+          </div>
+          <span class="tag-state live">活跃</span>
+        </div>
+
+        <div class="cast-card" style="--c:var(--teal)">
+          <div class="avatar">赵</div>
+          <div class="cast-main">
+            <div class="cast-line1"><b>赵哥</b><span class="role">业委会主任 · 3 套房</span></div>
+            <div class="cast-line2"><span class="stance"><i></i>支持调价</span><span>79</span></div>
+            <div class="meter"><i style="width:79%"></i></div>
+          </div>
+          <span class="tag-state live">活跃</span>
+        </div>
+
+        <div class="cast-card" style="--c:var(--blue)">
+          <div class="avatar">陈</div>
+          <div class="cast-main">
+            <div class="cast-line1"><b>陈律师</b><span class="role">执业律师 · 5 栋</span></div>
+            <div class="cast-line2"><span class="stance"><i></i>程序质疑</span><span>74</span></div>
+            <div class="meter"><i style="width:74%"></i></div>
+          </div>
+          <span class="tag-state live">活跃</span>
+        </div>
+
+        <div class="cast-card" style="--c:#b08fc9">
+          <div class="avatar">美</div>
+          <div class="cast-main">
+            <div class="cast-line1"><b>小美</b><span class="role">宝妈 · 关注电梯卫生</span></div>
+            <div class="cast-line2"><span class="stance"><i></i>条件支持</span><span>61</span></div>
+            <div class="meter"><i style="width:61%"></i></div>
+          </div>
+          <span class="tag-state live">活跃</span>
+        </div>
+
+        <div class="cast-card" style="--c:#9aa0ab">
+          <div class="avatar">周</div>
+          <div class="cast-main">
+            <div class="cast-line1"><b>老周</b><span class="role">退休教师 · 爱转发</span></div>
+            <div class="cast-line2"><span class="stance"><i></i>立场摇摆</span><span>48</span></div>
+            <div class="meter"><i style="width:48%"></i></div>
+          </div>
+          <span class="tag-state">转发</span>
+        </div>
+
+        <div class="cast-card" style="--c:#7d8899">
+          <div class="avatar">李</div>
+          <div class="cast-main">
+            <div class="cast-line1"><b>李工</b><span class="role">租户 · 程序员</span></div>
+            <div class="cast-line2"><span class="stance"><i></i>不表态</span><span>44</span></div>
+            <div class="meter"><i style="width:44%"></i></div>
+          </div>
+          <span class="tag-state">潜水</span>
+        </div>
+
+        <div class="cast-card" style="--c:#c9a86f">
+          <div class="avatar">陈</div>
+          <div class="cast-main">
+            <div class="cast-line1"><b>陈经理</b><span class="role">物业 · 发通知的人</span></div>
+            <div class="cast-line2"><span class="stance"><i></i>推动调价</span><span>67</span></div>
+            <div class="meter"><i style="width:67%"></i></div>
+          </div>
+          <span class="tag-state left">被围攻</span>
+        </div>
+
+        <div class="cast-card" style="--c:#6f7784">
+          <div class="avatar">匿</div>
+          <div class="cast-main">
+            <div class="cast-line1"><b>匿名</b><span class="role">新业主 · 昨天进群</span></div>
+            <div class="cast-line2"><span class="stance"><i></i>问停车费</span><span>12</span></div>
+            <div class="meter"><i style="width:12%"></i></div>
+          </div>
+          <span class="tag-state">被忽略</span>
+        </div>
+
+        <div class="cast-card" style="--c:#8a95a5">
+          <div class="avatar">张</div>
+          <div class="cast-main">
+            <div class="cast-line1"><b>张姐</b><span class="role">5 栋 · 跨群搬运</span></div>
+            <div class="cast-line2"><span class="stance"><i></i>围观扩散</span><span>39</span></div>
+            <div class="meter"><i style="width:39%"></i></div>
+          </div>
+          <span class="tag-state live">刚进群</span>
+        </div>
+
+      </div>
+      <div class="cast-foot"><span>+ 3 个角色未展示</span><span>点击可采访</span></div>
+    </aside>
+
+    <!-- stage -->
+    <section class="stage">
+      <div class="stage-head">
+        <div class="stage-title">
+          <b>翠湖花园 1 栋业主群</b>
+          <span>187 人 · 第 3 轮 · 周四 21:40</span>
+        </div>
+        <div class="rounds">
+          <span class="round-label">第 3 / 8 轮</span>
+          <div class="ticks">
+            <i class="tick on"></i><i class="tick on"></i><i class="tick now"></i>
+            <i class="tick"></i><i class="tick"></i><i class="tick"></i><i class="tick"></i><i class="tick"></i>
+          </div>
+          <div class="play">
+            <svg width="9" height="10" viewBox="0 0 9 10"><path d="M1 1l7 4-7 4z" fill="#cfccc6"/></svg>
+          </div>
+        </div>
+      </div>
+
+      <div class="chat">
+        <div class="round-div">
+          <span class="label">第 1 轮</span><span class="rule"></span><span class="meta">09:12</span>
+        </div>
+
+        <div class="sys">
+          <span class="pill god">上帝之手 · 你投放了「物业费上调 35%」</span>
+          <span class="pill">分叉点 #1</span>
+        </div>
+
+        <div class="msg">
+          <div class="avatar" style="--c:#c9a86f">陈</div>
+          <div class="bubble">
+            <div class="msg-head"><b>陈经理</b><span class="who">物业</span><time>09:12</time></div>
+            <div class="text">各位业主早上好。因人工与维保成本上涨，拟自下月起将物业费由 <b>2.8 元/㎡</b> 调整为 <b>3.8 元/㎡</b>，明细见附件。</div>
+            <div class="reply">被 2 人点赞 <i></i> 0 条回复</div>
+          </div>
+        </div>
+
+        <div class="msg">
+          <div class="avatar" style="--c:var(--coral)">王</div>
+          <div class="bubble">
+            <div class="msg-head"><b>王阿姨</b><span class="who">退休 · 12 年业主</span><time>09:18</time></div>
+            <div class="text hot">涨 35%？电梯上个月还坏了三天。<br/>先把这个月的账贴出来，再谈涨价。</div>
+            <div class="reply">6 人附和 <i></i> 被转发 3 次</div>
+          </div>
+        </div>
+
+        <div class="msg">
+          <div class="avatar" style="--c:var(--teal)">赵</div>
+          <div class="bubble">
+            <div class="msg-head"><b>赵哥</b><span class="who">业委会主任</span><time>09:21</time></div>
+            <div class="text">明细我看过了，人工成本确实涨了。大家理性讨论，别一上来就骂人。</div>
+            <div class="reply">2 人点赞 <i></i> 1 条回复</div>
+          </div>
+        </div>
+
+        <div class="round-div">
+          <span class="label">第 2 轮</span><span class="rule"></span><span class="meta">14:06</span>
+        </div>
+
+        <div class="msg">
+          <div class="avatar" style="--c:var(--blue)">陈</div>
+          <div class="bubble">
+            <div class="msg-head"><b>陈律师</b><span class="who">执业律师</span><time>14:06</time></div>
+            <div class="text law quote">《民法典》第九百四十四条：物业费调整属于业主共同决定事项。发个通知，不等于通过。</div>
+            <div class="reply">被 9 人点赞 <i></i> 首次出现「程序」一词</div>
+          </div>
+        </div>
+
+        <div class="msg">
+          <div class="avatar" style="--c:#b08fc9">美</div>
+          <div class="bubble">
+            <div class="msg-head"><b>小美</b><span class="who">宝妈</span><time>14:19</time></div>
+            <div class="text">我就问一句：涨完以后，楼道能不能天天拖？不能就别涨。</div>
+            <div class="reply">4 人附和</div>
+          </div>
+        </div>
+
+        <div class="ghost">
+          <span>李工 已读 14 条，未发言</span><span class="dash"></span><span>潜水 82%</span>
+        </div>
+
+        <div class="round-div">
+          <span class="label">第 3 轮</span><span class="rule"></span><span class="meta">21:40</span>
+        </div>
+
+        <div class="msg">
+          <div class="avatar" style="--c:var(--coral)">王</div>
+          <div class="bubble">
+            <div class="msg-head"><b>王阿姨</b><span class="who">退休 · 12 年业主</span><time>21:40</time></div>
+            <div class="text hot">我把明细发到 5 栋群了，明晚 8 点楼下花坛碰头。</div>
+            <div class="reply">3 人回复「到」 <i></i> 1 人退群</div>
+          </div>
+        </div>
+
+        <div class="sys">
+          <span class="pill"><b>3</b> 人退群</span>
+          <span class="pill"><b>4</b> 人沉默</span>
+          <span class="pill"><b>12</b> 次沉默</span>
+        </div>
+      </div>
+
+      <div class="emerge">
+        <div class="emerge-head">
+          <b>本轮涌现</b>
+          <span>由 12 个角色 × 3 轮生成 · 可点开原文</span>
+        </div>
+        <div class="emerge-row">
+          <div class="ec"><span class="idx">01</span><p><b>王阿姨</b>把群内矛盾搬到 5 栋群，冲突从 1 个群扩散到 3 个群。</p></div>
+          <div class="ec"><span class="idx">02</span><p><b>陈律师</b>引入法条后，讨论从「贵不贵」转向「合不合法」。</p></div>
+          <div class="ec"><span class="idx">03</span><p><b>匿名新业主</b>的提问被 9 条消息淹没，全程无人回应。</p></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- control -->
+    <aside class="control">
+
+      <div class="panel god">
+        <div class="panel-head">
+          <h3>上帝之手</h3>
+          <span class="live"><i></i>世界运行中</span>
+        </div>
+        <div class="inject">
+          <div class="field"><span>如果……</span><span class="caret"></span></div>
+          <div class="chips">
+            <span class="chip hi">停水 6 小时</span>
+            <span class="chip">主任退群</span>
+            <span class="chip">截图外传</span>
+            <span class="chip">降价 10%</span>
+          </div>
+          <div class="btns">
+            <div class="btn primary">投放事件 <kbd>⏎</kbd></div>
+          </div>
+          <div class="btns split">
+            <div class="btn small">分叉世界 A/B</div>
+            <div class="btn small ghost">加速一轮</div>
+          </div>
+          <p class="hint">投放后不可撤销，但可以分叉出另一个世界对照。</p>
+        </div>
+      </div>
+
+      <div class="panel stats">
+        <div class="panel-head">
+          <h3>世界状态</h3>
+          <span class="sub">第 3 轮</span>
+        </div>
+        <div class="temp">
+          <div class="num">68<small>°C</small></div>
+          <div class="cap"><b>情绪温度</b>较上一轮 +16</div>
+        </div>
+        <div class="spark">
+          <svg width="100%" height="38" viewBox="0 0 300 46" preserveAspectRatio="none">
+            <defs>
+              <linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#e2b264" stop-opacity=".28"/>
+                <stop offset="1" stop-color="#e2b264" stop-opacity="0"/>
+              </linearGradient>
+            </defs>
+            <path d="M0 38 L38 34 L76 36 L114 26 L152 28 L190 18 L228 21 L266 9 L300 4 L300 46 L0 46 Z" fill="url(#g)"/>
+            <path d="M0 38 L38 34 L76 36 L114 26 L152 28 L190 18 L228 21 L266 9 L300 4" fill="none" stroke="#e2b264" stroke-width="1.4" stroke-opacity=".85"/>
+            <circle cx="300" cy="4" r="2.4" fill="#e2b264"/>
+          </svg>
+        </div>
+        <div class="rows">
+          <div class="row"><span>极化度</span><span class="bar"><i class="warn" style="width:72%"></i></span><b>0.72</b></div>
+          <div class="row"><span>传播速度</span><span class="bar"><i style="width:58%"></i></span><b>2.4×</b></div>
+          <div class="row"><span>沉默率</span><span class="bar"><i style="width:41%"></i></span><b>41%</b></div>
+        </div>
+      </div>
+
+      <div class="panel scene-card">
+        <div class="panel-head">
+          <h3>名场面</h3>
+          <span class="sub">可回溯原文</span>
+        </div>
+        <div class="quote-big">「发个通知，<br/>不等于通过。」</div>
+        <div class="scene-meta"><span>陈律师</span><i></i><span>第 2 轮 14:06</span><i></i><span>被点赞 9 次</span></div>
+        <div class="forecast">
+          <div class="top"><span>5 轮内出现联名投诉</span><b>62%</b></div>
+          <p>若无干预，冲突将从「费用」升级为「程序合法性」。</p>
+        </div>
+        <div class="interview">
+          <div class="interview-top"><span>这个角色现在可以开口</span><span class="dot"></span></div>
+          <div class="interview-row">
+            <div class="avatar" style="--c:var(--blue);flex:0 0 26px;width:26px;height:26px;border-radius:7px;font-size:10.5px">陈</div>
+            <div class="iv-main"><b>采访陈律师</b><span>他只知道群里发生的事</span></div>
+            <div class="iv-btn">提问 →</div>
+          </div>
+        </div>
+        <div class="fork">
+          <div class="fork-head"><span>分叉预览 · 5 轮内联名投诉</span><span>未运行</span></div>
+          <div class="fork-row"><span class="k">A 静观其变</span><span class="b"><i style="width:62%"></i></span><b>62%</b></div>
+          <div class="fork-row"><span class="k">B 停水 6 小时</span><span class="b"><i class="alt" style="width:34%"></i></span><b>34%</b></div>
+        </div>
+        <div style="flex:1"></div>
+      </div>
+
+      <div class="proto-foot"><span>假如 / WHAT IF</span><span>PROTOTYPE 01</span></div>
+    </aside>
+
+  </div>
+</div>
+</body>
+</html>
