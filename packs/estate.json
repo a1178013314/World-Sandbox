@@ -1,0 +1,158 @@
+{
+  "id": "estate",
+  "name": "翠湖花园 · 物业涨价",
+  "renderMode": "chat",
+  "seed": {
+    "text": "【翠湖花园 1 栋业主群 · 物业通知】\n各位业主：因人工与维保成本上涨，拟自下月起将物业费由 2.8 元/㎡ 调整为 3.8 元/㎡，\n明细见附件。如有异议，请于本周五前反馈至物业办公室。\n—— 翠湖花园物业服务中心",
+    "scene": "翠湖花园 1 栋业主群",
+    "timeSlots": ["09:00", "14:00", "21:00", "次日 08:00"],
+    "gateCoefficient": 1
+  },
+  "recommendedRounds": 8,
+  "initialCast": [
+    {
+      "id": "wang_ayi",
+      "name": "王阿姨",
+      "role": "退休 · 12 年业主",
+      "goals": ["阻止涨价", "保住面子"],
+      "fears": ["被邻居觉得小题大做"],
+      "voice": "短句、爱反问，口头禅「先把账贴出来」",
+      "stance": { "issue": "物业费涨价", "position": "oppose", "intensity": 0.9 },
+      "influence": 0.86,
+      "activity": { "level": 0.8, "hours": [9, 14, 21] },
+      "can_see": ["本群消息", "被点名", "5 栋群转述"]
+    },
+    {
+      "id": "zhao_ge",
+      "name": "赵哥",
+      "role": "业委会主任 · 3 套房",
+      "goals": ["推动通过", "维持权威"],
+      "fears": ["被说和物业穿一条裤子"],
+      "voice": "打圆场、讲大局，爱说「大家冷静」",
+      "stance": { "issue": "物业费涨价", "position": "support", "intensity": 0.7 },
+      "influence": 0.79,
+      "activity": { "level": 0.7, "hours": [9, 14, 21] },
+      "can_see": ["本群消息", "业委会内部通知"]
+    },
+    {
+      "id": "chen_lvshi",
+      "name": "陈律师",
+      "role": "执业律师",
+      "goals": ["讲程序", "不站队"],
+      "fears": ["被当成带头闹事的人"],
+      "voice": "引法条、克制，一句一个「程序上」",
+      "stance": { "issue": "物业费涨价", "position": "procedural", "intensity": 0.6 },
+      "influence": 0.74,
+      "activity": { "level": 0.6, "hours": [9, 21] },
+      "can_see": ["本群消息", "被点名"]
+    },
+    {
+      "id": "xiao_mei",
+      "name": "小美",
+      "role": "宝妈 · 6 栋业主",
+      "goals": ["电梯安全", "楼道卫生"],
+      "fears": ["孩子上下学没人管"],
+      "voice": "具体、生活化，三句不离孩子",
+      "stance": { "issue": "物业费涨价", "position": "support", "intensity": 0.5 },
+      "influence": 0.61,
+      "activity": { "level": 0.65, "hours": [9, 21] },
+      "can_see": ["本群消息", "被点名", "电梯维保群"]
+    },
+    {
+      "id": "lao_zhou",
+      "name": "老周",
+      "role": "退休教师",
+      "goals": ["刷存在感"],
+      "fears": ["被群里忽略"],
+      "voice": "爱转发、感叹号多，喜欢发长句",
+      "stance": { "issue": "物业费涨价", "position": "neutral", "intensity": 0.3 },
+      "influence": 0.48,
+      "activity": { "level": 0.7, "hours": [8, 14, 21] },
+      "can_see": ["本群消息", "业主大群"]
+    },
+    {
+      "id": "li_gong",
+      "name": "李工",
+      "role": "租户 · 程序员",
+      "goals": ["别烦我"],
+      "fears": ["被拉进无休止的群吵"],
+      "voice": "极简、常潜水，偶尔一句冷幽默",
+      "stance": { "issue": "物业费涨价", "position": "neutral", "intensity": 0 },
+      "influence": 0.44,
+      "activity": { "level": 0.3, "hours": [21] },
+      "can_see": ["本群消息"]
+    },
+    {
+      "id": "chen_jingli",
+      "name": "陈经理",
+      "role": "物业服务中心经理",
+      "goals": ["把通知执行下去"],
+      "fears": ["业主投诉到街道"],
+      "voice": "官方、回避细节，爱说「理解大家的心情」",
+      "stance": { "issue": "物业费涨价", "position": "support", "intensity": 0.8 },
+      "influence": 0.67,
+      "activity": { "level": 0.75, "hours": [9, 14] },
+      "can_see": ["本群消息", "被点名", "物业内部群"]
+    },
+    {
+      "id": "ni_ming",
+      "name": "匿名",
+      "role": "新业主",
+      "goals": ["弄清停车费"],
+      "fears": ["被老业主认出来"],
+      "voice": "客气、小心翼翼，常加「请问一下」",
+      "stance": { "issue": "物业费涨价", "position": "neutral", "intensity": 0.1 },
+      "influence": 0.12,
+      "activity": { "level": 0.5, "hours": [9, 21] },
+      "can_see": ["本群消息"]
+    },
+    {
+      "id": "zhang_jie",
+      "name": "张姐",
+      "role": "5 栋业主 · 跨群搬运",
+      "goals": ["扩散信息"],
+      "fears": ["错过第一手热闹"],
+      "voice": "八卦、爱截图，常说「我转给大家看看」",
+      "stance": { "issue": "物业费涨价", "position": "neutral", "intensity": 0.4 },
+      "influence": 0.39,
+      "activity": { "level": 0.75, "hours": [8, 9, 14, 21] },
+      "can_see": ["本群消息", "5 栋群", "被点名"]
+    },
+    {
+      "id": "baoan_liu",
+      "name": "保安老刘",
+      "role": "物业保安",
+      "goals": ["少惹事"],
+      "fears": ["被领导批评"],
+      "voice": "憨厚、短句，只说看见的事",
+      "stance": { "issue": "物业费涨价", "position": "neutral", "intensity": 0.2 },
+      "influence": 0.25,
+      "activity": { "level": 0.4, "hours": [8, 14, 21] },
+      "can_see": ["本群消息", "门岗见闻"]
+    },
+    {
+      "id": "er_tai_baba",
+      "name": "二胎爸爸",
+      "role": "业主 · 两个娃",
+      "goals": ["降低家庭开支"],
+      "fears": ["开销继续失控"],
+      "voice": "算账、爱比较，句句带数字",
+      "stance": { "issue": "物业费涨价", "position": "oppose", "intensity": 0.6 },
+      "influence": 0.52,
+      "activity": { "level": 0.65, "hours": [8, 21] },
+      "can_see": ["本群消息", "被点名"]
+    },
+    {
+      "id": "tou_zi_ke",
+      "name": "投资客",
+      "role": "3 套出租 · 不在小区住",
+      "goals": ["别影响租金"],
+      "fears": ["租客因物业费退租"],
+      "voice": "冷静、利益导向，爱提「市场价」",
+      "stance": { "issue": "物业费涨价", "position": "oppose", "intensity": 0.5 },
+      "influence": 0.58,
+      "activity": { "level": 0.55, "hours": [14, 21] },
+      "can_see": ["本群消息", "租房平台行情"]
+    }
+  ]
+}

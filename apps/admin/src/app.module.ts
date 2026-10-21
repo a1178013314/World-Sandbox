@@ -6,6 +6,8 @@ import { databaseConfig } from "./infra/config/database.config";
 import { validateEnv } from "./infra/config/validate-env";
 import { DatabaseModule } from "./infra/database/database.module";
 import { LoggerModule } from "./logger/logger.module";
+import { sandboxConfig } from "./modules/sandbox/sandbox.config";
+import { SandboxModule } from "./modules/sandbox/sandbox.module";
 
 @Module({
   imports: [
@@ -13,10 +15,11 @@ import { LoggerModule } from "./logger/logger.module";
       isGlobal: true,
       cache: true,
       validate: validateEnv,
-      load: [databaseConfig],
+      load: [databaseConfig, sandboxConfig],
     }),
     LoggerModule,
     DatabaseModule,
+    SandboxModule,
   ],
   controllers: [AppController],
 })

@@ -15,7 +15,7 @@ export default defineConfig({
   ],
   test: {
     environment: "node",
-    include: ["src/**/*.test.ts", "test/**/*.e2e-spec.ts"],
+    include: ["src/**/*.{test,spec}.ts", "test/**/*.e2e-spec.ts"],
     setupFiles: ["./test/setup-env.ts"],
     testTimeout: 30000,
     hookTimeout: 30000,
