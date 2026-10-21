@@ -1,9 +1,12 @@
-import type {
-  AgentProfile,
-  PackConfig,
-  PackSummary,
-  StancePosition,
-  WorldRecord,
+import {
+  type AgentProfile,
+  type ForgePackResult,
+  type PackConfig,
+  type PackSummary,
+  type StancePosition,
+  WORLD_MAX_ROUNDS,
+  WORLD_MIN_ROUNDS,
+  type WorldRecord,
 } from "@ifss/shared";
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router";
@@ -22,6 +25,7 @@ import {
   ForkIcon,
   MapIcon,
   PlusIcon,
+  SparkIcon,
   UploadIcon,
 } from "@/features/sandbox/icons";
 import {
@@ -41,6 +45,10 @@ const QUICK_SEEDS = [
   "电梯停了两天，维修基金却查不到明细。",
   "有人在群里发了一张据说是内部的涨价名单。",
 ];
+
+function clampRounds(value: number): number {
+  return Math.min(WORLD_MAX_ROUNDS, Math.max(WORLD_MIN_ROUNDS, Math.round(value)));
+}
 
 function WorldRow({ world }: { world: WorldRecord }) {
   return (
@@ -102,11 +110,14 @@ export function WorldsPage() {
   const [packId, setPackId] = useState("estate");
   const [pack, setPack] = useState<PackConfig | null>(null);
   const [seedText, setSeedText] = useState("");
-  const [totalRounds, setTotalRounds] = useState(8);
+  const [totalRounds, setTotalRounds] = useState(WORLD_MIN_ROUNDS);
   const [mode, setMode] = useState<"preset" | "generated">("preset");
   const [castSize, setCastSize] = useState(12);
   const [profiles, setProfiles] = useState<AgentProfile[]>([]);
   const [generating, setGenerating] = useState(false);
+  const [forgePrompt, setForgePrompt] = useState("");
+  const [forging, setForging] = useState(false);
+  const [forgeResult, setForgeResult] = useState<ForgePackResult | null>(null);
   const [creating, setCreating] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [importOpen, setImportOpen] = useState(false);
@@ -150,7 +161,7 @@ export function WorldsPage() {
         if (cancelled) return;
         setPack(value);
         setSeedText(value.seed.text);
-        setTotalRounds(value.recommendedRounds);
+        setTotalRounds(clampRounds(value.recommendedRounds));
         setCastSize(Math.min(12, Math.max(3, value.initialCast.length)));
         setProfiles([]);
         setMode("preset");
@@ -181,6 +192,30 @@ export function WorldsPage() {
     }
   }
 
+  async function handleForge(): Promise<void> {
+    const prompt = forgePrompt.trim();
+    if (!prompt) {
+      setFormError("先写一句话，比如一件正在发生的事。");
+      return;
+    }
+    setForging(true);
+    setFormError(null);
+    try {
+      const result = await sandboxApi.forgePack({
+        prompt,
+        castSize: Math.min(castSize, 8),
+        totalRounds,
+      });
+      setForgeResult(result);
+      setPacks(await sandboxApi.packs());
+      setPackId(result.pack.id);
+    } catch (error) {
+      setFormError(error instanceof ApiError ? error.message : typedError(error));
+    } finally {
+      setForging(false);
+    }
+  }
+
   async function handleCreate(): Promise<void> {
     if (!pack) {
       setFormError("种子包还没加载完成。");
@@ -193,10 +228,12 @@ export function WorldsPage() {
     setCreating(true);
     setFormError(null);
     try {
+      const rounds = clampRounds(totalRounds);
+      setTotalRounds(rounds);
       const { id } = await sandboxApi.createWorld({
         packId,
         seedText,
-        totalRounds,
+        totalRounds: rounds,
         cast: mode === "preset" ? "preset" : profiles,
       });
       navigate(`/world/${id}`);
@@ -252,11 +289,11 @@ export function WorldsPage() {
           <dl className="num mt-8 flex flex-wrap gap-x-8 gap-y-3 text-[11px] text-paper-muted">
             <div className="flex items-baseline gap-2">
               <dt className="text-paper-muted/60">预置角色</dt>
-              <dd className="text-paper">{packs[0]?.castSize ?? "—"} 人</dd>
+              <dd className="text-paper">{pack?.initialCast.length ?? "—"} 人</dd>
             </div>
             <div className="flex items-baseline gap-2">
               <dt className="text-paper-muted/60">推荐轮次</dt>
-              <dd className="text-paper">{packs[0]?.recommendedRounds ?? "—"} 轮</dd>
+              <dd className="text-paper">{pack?.recommendedRounds ?? "—"} 轮</dd>
             </div>
             <div className="flex items-baseline gap-2">
               <dt className="text-paper-muted/60">每个世界调用上限</dt>
@@ -290,6 +327,71 @@ export function WorldsPage() {
               {formError ? (
                 <ErrorBanner message={formError} onClose={() => setFormError(null)} />
               ) : null}
+
+              <div className="space-y-2 border border-ink-line/70 bg-ink/40 p-3">
+                <div className="flex items-baseline justify-between gap-2">
+                  <span className="text-[11px] font-medium uppercase tracking-[0.18em] text-paper-muted">
+                    一句话起盘
+                  </span>
+                  <span className="text-[10px] text-paper-muted/70">联网检索 · 自动配角色</span>
+                </div>
+                <textarea
+                  className={`${inputClass} min-h-16 resize-y text-[13px] leading-relaxed`}
+                  value={forgePrompt}
+                  onChange={(event) => setForgePrompt(event.target.value)}
+                  placeholder="比如：我们小区物业突然通知，物业费要从 2.8 涨到 3.8"
+                />
+                <SandboxButton
+                  size="sm"
+                  variant="outline"
+                  className="w-full"
+                  busy={forging}
+                  disabled={!forgePrompt.trim()}
+                  onClick={handleForge}
+                >
+                  <SparkIcon size={14} />
+                  {forging ? "正在检索并装配…" : "检索资料，生成种子包"}
+                </SandboxButton>
+                {forgeResult ? (
+                  <div className="space-y-1.5 border-t border-ink-line/60 pt-2">
+                    <p className="text-[11px] leading-relaxed text-paper">
+                      已生成 <span className="text-amber">{forgeResult.pack.name}</span>
+                      <span className="text-paper-muted">
+                        {" "}
+                        · {forgeResult.pack.initialCast.length} 人 · 已选中
+                      </span>
+                    </p>
+                    {forgeResult.sources.length > 0 ? (
+                      <ul className="space-y-1">
+                        {forgeResult.sources.slice(0, 3).map((source) => (
+                          <li key={source.url} className="truncate text-[10px]">
+                            <a
+                              href={source.url}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="text-paper-muted underline decoration-ink-line underline-offset-2 transition-colors hover:text-amber"
+                            >
+                              {truncate(source.title, 30)}
+                            </a>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="text-[10px] text-paper-muted/70">
+                        {forgeResult.searchFailed
+                          ? "检索没成功，已按你的输入直接生成。"
+                          : "没检索到可用资料，已按你的输入直接生成。"}
+                      </p>
+                    )}
+                  </div>
+                ) : (
+                  <p className="text-[10px] leading-relaxed text-paper-muted/60">
+                    先联网找资料，再把事实、人物和立场配成种子包；最多 8 人，约 60–90
+                    秒。生成后自动选中，可改种子再建世界。
+                  </p>
+                )}
+              </div>
+
               <Field label="种子包">
                 <select
                   className={selectClass}
@@ -337,14 +439,19 @@ export function WorldsPage() {
               </Field>
 
               <div className="grid grid-cols-2 gap-3">
-                <Field label="总轮次">
+                <Field label="总轮次" hint={`${WORLD_MIN_ROUNDS}–${WORLD_MAX_ROUNDS} 轮`}>
                   <input
                     className={`${inputClass} num`}
                     type="number"
-                    min={1}
-                    max={20}
+                    min={WORLD_MIN_ROUNDS}
+                    max={WORLD_MAX_ROUNDS}
+                    step={1}
                     value={totalRounds}
-                    onChange={(event) => setTotalRounds(Number(event.target.value))}
+                    onChange={(event) => {
+                      const next = Number(event.target.value);
+                      if (Number.isFinite(next)) setTotalRounds(next);
+                    }}
+                    onBlur={() => setTotalRounds((current) => clampRounds(current))}
                   />
                 </Field>
                 <Field label="角色来源">

@@ -1,0 +1,134 @@
+{
+  "id": "rental",
+  "name": "安家公寓 · 二房东爆雷",
+  "renderMode": "chat",
+  "seed": {
+    "text": "【安家公寓 · 3 栋租客群】\n房东刚在门上贴了通知：安家公寓已欠他 3 个月租金，限 7 天内搬离，否则换锁。\n我 7 月刚签一年，月租 820，押金 820，季付，上一季的 2460 元已经打给安家。\n房管小刘说公司「不挣钱，不做了」，可以换房或退租，退款要等 15 个工作日。\n—— 租客 小陈\n\n（群里有人提到，2025 年 9 月 15 日《住房租赁条例》已经施行：押金扣减要按合同约定；转租企业要通过资金监管账户收付租金。也有人说，成都今年有租客交了 3810 元，至今没追回来。）",
+    "scene": "安家公寓 · 3 栋租客群",
+    "timeSlots": ["08:00", "12:30", "18:30", "22:00"],
+    "gateCoefficient": 0.95
+  },
+  "recommendedRounds": 10,
+  "initialCast": [
+    {
+      "id": "fang_dong_lao_li",
+      "name": "老李",
+      "role": "3 栋房东 · 还有房贷",
+      "goals": ["收回房子", "把欠租补上"],
+      "fears": ["房子被租客占着", "断供"],
+      "voice": "硬、短句，常说「按合同」「我也有贷款」，叫租客「小伙子」「姑娘」，绝不说「你们去找二房东」",
+      "stance": { "issue": "二房东违约", "position": "oppose", "intensity": 0.8 },
+      "influence": 0.65,
+      "activity": { "level": 0.7, "hours": [8, 12, 18] },
+      "can_see": ["本群消息", "租赁合同", "房门通知"]
+    },
+    {
+      "id": "zu_ke_xiao_chen",
+      "name": "小陈",
+      "role": "刚毕业 · 季付租客",
+      "goals": ["要回 2460 元租金和 820 元押金", "别被赶走"],
+      "fears": ["钱没了还要露宿", "上班迟到"],
+      "voice": "急、短句，反复问「那我住哪」，常说「我刚毕业」，叫房东「李叔」、房管「刘哥」，绝不说「算了搬走」",
+      "stance": { "issue": "二房东违约", "position": "oppose", "intensity": 0.85 },
+      "influence": 0.4,
+      "activity": { "level": 0.9, "hours": [8, 12, 18, 22] },
+      "can_see": ["本群消息", "转账记录", "租房合同"]
+    },
+    {
+      "id": "fang_guan_xiao_liu",
+      "name": "小刘",
+      "role": "安家公寓房管",
+      "goals": ["把租客安抚住", "自己工资拿到"],
+      "fears": ["被租客围住", "被公司甩锅"],
+      "voice": "油、爱拖，常说「我在帮你申请」「15 个工作日」，叫租客「哥」「姐」，绝不说「公司跑路了」",
+      "stance": { "issue": "二房东违约", "position": "neutral", "intensity": 0.4 },
+      "influence": 0.5,
+      "activity": { "level": 0.8, "hours": [8, 12, 18] },
+      "can_see": ["本群消息", "公司内部群", "退款流程"]
+    },
+    {
+      "id": "an_jia_lao_ban",
+      "name": "周某",
+      "role": "安家公寓实际控制人",
+      "goals": ["拖过这阵", "保住公司壳"],
+      "fears": ["被立案", "被房东堵门"],
+      "voice": "极少说话，一开口就是「在筹钱」「别报警」，叫大家「各位」，绝不说「我不干了」",
+      "stance": { "issue": "二房东违约", "position": "support", "intensity": 0.6 },
+      "influence": 0.75,
+      "activity": { "level": 0.2, "hours": [22] },
+      "can_see": ["本群消息", "公司账目", "被点名"]
+    },
+    {
+      "id": "lv_shi",
+      "name": "林律师",
+      "role": "执业律师 · 租客",
+      "goals": ["讲清押金和租金路径", "不替谁打包票"],
+      "fears": ["被当成带头闹事", "说错法条"],
+      "voice": "克制、先问合同，常说「按条例第十条」「先固定证据」，叫别人「这位租客」，绝不说「包赢」",
+      "stance": { "issue": "二房东违约", "position": "procedural", "intensity": 0.7 },
+      "influence": 0.68,
+      "activity": { "level": 0.5, "hours": [12, 22] },
+      "can_see": ["本群消息", "住房租赁条例", "合同与转账记录"]
+    },
+    {
+      "id": "she_qu_xiao_wang",
+      "name": "小王",
+      "role": "街道社区 · 调解",
+      "goals": ["别让冲突升级", "把双方拉到桌上"],
+      "fears": ["被拍视频", "事情闹大"],
+      "voice": "和气、打圆场，常说「大家先别激动」「我们协调一下」，叫大家「各位居民」，绝不说「这事不归我们管」",
+      "stance": { "issue": "二房东违约", "position": "procedural", "intensity": 0.5 },
+      "influence": 0.55,
+      "activity": { "level": 0.6, "hours": [8, 12, 18] },
+      "can_see": ["本群消息", "街道调解记录", "被点名"]
+    },
+    {
+      "id": "shi_you_xiao_zhou",
+      "name": "小周",
+      "role": "合租室友 · 押一付三",
+      "goals": ["继续住", "让房东认下已付租金"],
+      "fears": ["重新找房", "押金也拿不回"],
+      "voice": "谨慎、爱问细节，常说「那我们交的钱算谁的」，叫房东「李叔」、小陈「陈哥」，绝不说「我无所谓」",
+      "stance": { "issue": "二房东违约", "position": "oppose", "intensity": 0.6 },
+      "influence": 0.42,
+      "activity": { "level": 0.7, "hours": [8, 18, 22] },
+      "can_see": ["本群消息", "合租合同", "转账记录"]
+    },
+    {
+      "id": "huan_suo_shi_fu",
+      "name": "老吴",
+      "role": "开锁换锁 · 上门师傅",
+      "goals": ["拿工钱", "不掺和纠纷"],
+      "fears": ["被当成帮凶", "被投诉"],
+      "voice": "憨厚、只说看见的，常说「我只管换锁」「房东让我来的」，叫别人「老板」，绝不说「我帮你们作证」",
+      "stance": { "issue": "二房东违约", "position": "neutral", "intensity": 0.3 },
+      "influence": 0.25,
+      "activity": { "level": 0.4, "hours": [8, 12, 18] },
+      "can_see": ["本群消息", "上门见闻", "被点名"]
+    },
+    {
+      "id": "zhong_jie_xiao_gu",
+      "name": "小顾",
+      "role": "房产中介 · 附近门店",
+      "goals": ["接住这波租客", "推几套房"],
+      "fears": ["被当成二房东同伙", "被群主踢"],
+      "voice": "热情、爱推房源，常说「我这有套民水民电」「今天就能看」，叫大家「哥」「姐」，绝不说「你们活该」",
+      "stance": { "issue": "二房东违约", "position": "neutral", "intensity": 0.2 },
+      "influence": 0.35,
+      "activity": { "level": 0.85, "hours": [8, 12, 18, 22] },
+      "can_see": ["本群消息", "附近房源"]
+    },
+    {
+      "id": "lin_ju_ayi",
+      "name": "张阿姨",
+      "role": "隔壁 302 · 退休",
+      "goals": ["看热闹", "提醒租客留证据"],
+      "fears": ["被卷进去", "被房东记恨"],
+      "voice": "八卦、热心的短句，常说「我听见了」「你们赶紧拍照」，叫租客「小姑娘」「小伙子」，绝不说「我什么都没看见」",
+      "stance": { "issue": "二房东违约", "position": "neutral", "intensity": 0.35 },
+      "influence": 0.3,
+      "activity": { "level": 0.65, "hours": [8, 12, 18, 21] },
+      "can_see": ["本群消息", "楼道见闻"]
+    }
+  ]
+}

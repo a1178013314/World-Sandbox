@@ -8,7 +8,7 @@
     "timeSlots": ["09:00", "14:00", "21:00", "次日 08:00"],
     "gateCoefficient": 1
   },
-  "recommendedRounds": 8,
+  "recommendedRounds": 12,
   "initialCast": [
     {
       "id": "wang_ayi",

@@ -2,9 +2,10 @@ import type { SandboxEvent, WorldSnapshot } from "@ifss/shared";
 import { useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { firstChar, formatClock, POSITION_TONE, pct } from "./format";
-import { PlayIcon, QuoteIcon } from "./icons";
+import { PauseIcon, PlayIcon, QuoteIcon, SpeakerIcon } from "./icons";
 import type { LiveRound } from "./stream-state";
-import { SandboxButton, Tag, TypingDots } from "./ui";
+import { SandboxButton, Spinner, Tag, TypingDots } from "./ui";
+import { useNarration } from "./use-narration";
 
 function isSpeech(event: SandboxEvent): boolean {
   return event.kind === "post" || event.kind === "reply";
@@ -14,10 +15,16 @@ function EventLine({
   event,
   snapshot,
   onInterview,
+  onSpeak,
+  speaking,
+  loading,
 }: {
   event: SandboxEvent;
   snapshot: WorldSnapshot;
   onInterview: (agentId: string) => void;
+  onSpeak: (seq: number) => void;
+  speaking: boolean;
+  loading: boolean;
 }) {
   const agent = snapshot.agents.find((item) => item.agentId === event.actorId);
   const target = event.targetId
@@ -111,7 +118,27 @@ function EventLine({
               </span>
             ) : null}
             {event.payload?.quota_violation ? <Tag tone="coral">超发帖配额</Tag> : null}
-            <span className="num ml-auto text-[9px] text-paper-muted/40">
+            <button
+              type="button"
+              onClick={() => onSpeak(event.seq)}
+              className={cn(
+                "ml-auto inline-flex size-5 items-center justify-center border transition-colors",
+                speaking || loading
+                  ? "border-amber/50 text-amber"
+                  : "border-transparent text-paper-muted/40 hover:border-ink-line hover:text-amber",
+              )}
+              aria-label={speaking ? `暂停朗读 ${actorName}` : `朗读 ${actorName} 的发言`}
+              title={speaking ? "暂停朗读" : "朗读这条发言"}
+            >
+              {loading ? (
+                <Spinner className="size-2.5" />
+              ) : speaking ? (
+                <PauseIcon size={11} />
+              ) : (
+                <SpeakerIcon size={11} />
+              )}
+            </button>
+            <span className="num text-[9px] text-paper-muted/40">
               #{event.seq} · {formatClock(event.createdAt)}
             </span>
           </div>
@@ -159,6 +186,7 @@ export function FeedPanel({
 }) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const previousCount = useRef(0);
+  const narration = useNarration(snapshot.world.id, events);
   const seed = events.find((event) => event.round === 0 && event.kind === "system");
   const rounds = [
     ...new Set([
@@ -195,6 +223,21 @@ export function FeedPanel({
           <span className="text-[10px] text-paper-muted">{snapshot.world.seed.scene}</span>
         </div>
         <div className="flex items-center gap-2 text-[10px] text-paper-muted">
+          <button
+            type="button"
+            onClick={narration.toggleAutoRead}
+            aria-pressed={narration.autoRead}
+            title={narration.autoRead ? "关闭连续朗读" : "开启后，新发言会自动朗读"}
+            className={cn(
+              "inline-flex items-center gap-1 border px-1.5 py-0.5 text-[9px] transition-colors",
+              narration.autoRead
+                ? "border-amber/50 text-amber"
+                : "border-ink-line text-paper-muted hover:border-amber/40 hover:text-amber",
+            )}
+          >
+            <SpeakerIcon size={11} />
+            {narration.autoRead ? "连续朗读中" : "连续朗读"}
+          </button>
           <span className="num">{events.filter((event) => event.round > 0).length} 条事件</span>
           {running ? (
             <span className="inline-flex items-center gap-1.5 text-teal">
@@ -206,6 +249,18 @@ export function FeedPanel({
       </header>
 
       <div ref={scrollRef} className="sandbox-scroll min-h-0 flex-1 overflow-y-auto">
+        {narration.error ? (
+          <div className="flex items-center justify-between gap-2 border-b border-coral/30 bg-coral/[0.06] px-4 py-1.5 text-[10px] text-coral">
+            <span>{narration.error}</span>
+            <button
+              type="button"
+              onClick={narration.clearError}
+              className="text-coral/60 transition-colors hover:text-coral"
+            >
+              知道了
+            </button>
+          </div>
+        ) : null}
         {seed ? (
           <div className="border-b border-ink-line/80 bg-ink-raised/40 px-6 py-5">
             <div className="flex items-center gap-2 text-[9px] uppercase tracking-[0.2em] text-paper-muted/70">
@@ -282,7 +337,14 @@ export function FeedPanel({
 
               {roundEvents.map((event, index) => (
                 <div key={event.seq} style={{ animationDelay: `${Math.min(index, 8) * 120}ms` }}>
-                  <EventLine event={event} snapshot={snapshot} onInterview={onInterview} />
+                  <EventLine
+                    event={event}
+                    snapshot={snapshot}
+                    onInterview={onInterview}
+                    onSpeak={narration.play}
+                    speaking={narration.speakingSeq === event.seq}
+                    loading={narration.loadingSeq === event.seq}
+                  />
                 </div>
               ))}
 

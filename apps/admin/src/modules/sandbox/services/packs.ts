@@ -1,14 +1,15 @@
-import { readdirSync, readFileSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { type PackConfig, PackConfigSchema, type PackSummary, summarizePack } from "@ifss/shared";
 import { Injectable, NotFoundException, type OnModuleInit } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { AppLoggerService } from "../../../logger/app-logger.service";
 
-/** 启动时读 packs/*.json；坏包只 warn 并跳过，不影响启动。 */
+/** 启动时读 packs/*.json 与 packs/generated/*.json；坏包只 warn 并跳过，不影响启动。 */
 @Injectable()
 export class PacksService implements OnModuleInit {
   private readonly packs = new Map<string, PackConfig>();
+  private rootDir = "packs";
 
   constructor(
     private readonly config: ConfigService,
@@ -16,7 +17,16 @@ export class PacksService implements OnModuleInit {
   ) {}
 
   onModuleInit(): void {
-    const dir = this.config.get<string>("sandbox.packsDir") ?? "packs";
+    this.rootDir = this.config.get<string>("sandbox.packsDir") ?? "packs";
+    this.loadDir(this.rootDir, false);
+    this.loadDir(join(this.rootDir, "generated"), true);
+    this.logger.info("种子包加载完成", { count: this.packs.size, dir: this.rootDir });
+  }
+
+  private loadDir(dir: string, optional: boolean): void {
+    if (optional && !existsSync(dir)) {
+      return;
+    }
     let files: string[];
     try {
       files = readdirSync(dir).filter((file) => file.endsWith(".json"));
@@ -40,7 +50,24 @@ export class PacksService implements OnModuleInit {
         });
       }
     }
-    this.logger.info("种子包加载完成", { count: this.packs.size, dir });
+  }
+
+  /** 运行时注册（一句话生成）；默认落盘到 packs/generated，重启后仍在。 */
+  register(pack: PackConfig): void {
+    this.packs.set(pack.id, pack);
+    if (!(this.config.get<boolean>("sandbox.persistGeneratedPacks") ?? true)) {
+      return;
+    }
+    try {
+      const dir = join(this.rootDir, "generated");
+      mkdirSync(dir, { recursive: true });
+      writeFileSync(join(dir, `${pack.id}.json`), `${JSON.stringify(pack, null, 2)}\n`, "utf8");
+    } catch (error) {
+      this.logger.warnWithFields("种子包落盘失败，仅保存在内存", {
+        packId: pack.id,
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
   }
 
   list(): PackSummary[] {

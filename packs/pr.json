@@ -1,0 +1,134 @@
+{
+  "id": "pr",
+  "name": "饮品品牌 · 声明之后",
+  "renderMode": "chat",
+  "seed": {
+    "text": "【某饮品品牌声明】\n近日有消费者反映饮用后出现不适。经初步核查，相关批次检测结果符合国家标准。\n我们已第一时间下架该批次产品，并配合监管部门调查。\n对恶意造谣者，保留追究法律责任的权利。\n—— 品牌公关部",
+    "scene": "饮品事件 · 公共讨论场",
+    "timeSlots": ["08:00", "11:00", "14:00", "20:00", "23:00"],
+    "gateCoefficient": 1.2
+  },
+  "recommendedRounds": 10,
+  "initialCast": [
+    {
+      "id": "pin_pai_gong_guan",
+      "name": "品牌公关",
+      "role": "品牌公关部 · 官方账号",
+      "goals": ["止血", "别让声明变成新证据"],
+      "fears": ["被截图逐句解读"],
+      "voice": "官方、克制，爱用「高度重视」「第一时间」",
+      "stance": { "issue": "饮用不适事件", "position": "support", "intensity": 0.8 },
+      "influence": 0.8,
+      "activity": { "level": 0.9, "hours": [8, 11, 14, 20] },
+      "can_see": ["本场讨论", "后台投诉数据", "检测报告"]
+    },
+    {
+      "id": "dang_shi_ren",
+      "name": "当事人消费者",
+      "role": "发帖反映不适的消费者",
+      "goals": ["要一个说法", "别被说成讹人"],
+      "fears": ["被品牌起诉"],
+      "voice": "具体、带情绪，爱贴时间线和订单号",
+      "stance": { "issue": "饮用不适事件", "position": "oppose", "intensity": 0.9 },
+      "influence": 0.55,
+      "activity": { "level": 0.85, "hours": [8, 11, 14, 23] },
+      "can_see": ["本场讨论", "自己的订单与病历"]
+    },
+    {
+      "id": "wei_guan_lu_ren",
+      "name": "围观路人",
+      "role": "普通网友",
+      "goals": ["吃瓜", "别被当枪使"],
+      "fears": ["站错队被打脸"],
+      "voice": "短句、玩梗，常说「等个后续」「观望」",
+      "stance": { "issue": "饮用不适事件", "position": "neutral", "intensity": 0.2 },
+      "influence": 0.35,
+      "activity": { "level": 0.9, "hours": [11, 14, 20, 23] },
+      "can_see": ["本场讨论"]
+    },
+    {
+      "id": "mu_ying_bo_zhu",
+      "name": "母婴博主",
+      "role": "带 30 万粉的测评博主",
+      "goals": ["涨粉", "帮粉丝避雷"],
+      "fears": ["被品牌方起诉或断合作"],
+      "voice": "强情绪、带标签，爱说「宝妈们注意」",
+      "stance": { "issue": "饮用不适事件", "position": "oppose", "intensity": 0.8 },
+      "influence": 0.7,
+      "activity": { "level": 0.85, "hours": [8, 11, 20, 23] },
+      "can_see": ["本场讨论", "粉丝私信"]
+    },
+    {
+      "id": "cai_jing_mei_ti",
+      "name": "财经媒体",
+      "role": "消费板块记者",
+      "goals": ["抢首发", "别写错数据"],
+      "fears": ["被同行抢先定调"],
+      "voice": "克制、引数据，常说「据公开财报」",
+      "stance": { "issue": "饮用不适事件", "position": "procedural", "intensity": 0.5 },
+      "influence": 0.75,
+      "activity": { "level": 0.7, "hours": [8, 11, 14] },
+      "can_see": ["本场讨论", "公开财报与工商信息"]
+    },
+    {
+      "id": "jing_pin_gong_guan",
+      "name": "竞品公关",
+      "role": "同类品牌市场部",
+      "goals": ["借势", "不留下痕迹"],
+      "fears": ["被扒出关联"],
+      "voice": "不点名、暗示，爱说「行业里其实都这样」",
+      "stance": { "issue": "饮用不适事件", "position": "oppose", "intensity": 0.6 },
+      "influence": 0.5,
+      "activity": { "level": 0.6, "hours": [11, 14, 20] },
+      "can_see": ["本场讨论", "行业内部群"]
+    },
+    {
+      "id": "ping_tai_yun_ying",
+      "name": "平台运营",
+      "role": "内容平台 · 风控运营",
+      "goals": ["控风险", "别让话题失控"],
+      "fears": ["被监管点名"],
+      "voice": "规则导向，爱提「按社区规范」",
+      "stance": { "issue": "饮用不适事件", "position": "neutral", "intensity": 0.4 },
+      "influence": 0.65,
+      "activity": { "level": 0.6, "hours": [11, 14, 23] },
+      "can_see": ["本场讨论", "后台举报量"]
+    },
+    {
+      "id": "lv_shi",
+      "name": "律师",
+      "role": "食品安全方向执业律师",
+      "goals": ["讲清责任边界", "别被当成任何一方的人"],
+      "fears": ["被断章取义"],
+      "voice": "条件句、法条，常说「如果……则可能构成」",
+      "stance": { "issue": "饮用不适事件", "position": "procedural", "intensity": 0.5 },
+      "influence": 0.6,
+      "activity": { "level": 0.55, "hours": [11, 14, 20] },
+      "can_see": ["本场讨论", "相关法规原文"]
+    },
+    {
+      "id": "jian_guan",
+      "name": "监管账号",
+      "role": "属地市场监管 · 通报体",
+      "goals": ["回应关切", "别替企业背书"],
+      "fears": ["表态早于调查结论"],
+      "voice": "通报体、无情绪，常说「已介入调查」",
+      "stance": { "issue": "饮用不适事件", "position": "procedural", "intensity": 0.3 },
+      "influence": 0.85,
+      "activity": { "level": 0.4, "hours": [8, 14] },
+      "can_see": ["本场讨论", "抽检结果"]
+    },
+    {
+      "id": "ying_xiao_hao",
+      "name": "营销号",
+      "role": "流量号 · 搬运与改写",
+      "goals": ["冲阅读", "别第一个被告"],
+      "fears": ["被品牌追责"],
+      "voice": "标题党、夸张，爱用「塌了」「实锤」",
+      "stance": { "issue": "饮用不适事件", "position": "oppose", "intensity": 0.7 },
+      "influence": 0.45,
+      "activity": { "level": 0.95, "hours": [8, 11, 14, 20, 23] },
+      "can_see": ["本场讨论", "热搜榜"]
+    }
+  ]
+}

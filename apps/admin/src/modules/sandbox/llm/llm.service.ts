@@ -21,6 +21,7 @@ export interface LlmCompletionInput extends LlmCallContext {
   prompt: string;
   maxTokens: number;
   temperature: number;
+  timeoutMs?: number;
 }
 
 export function promptHashOf(model: string, prompt: string): string {
@@ -64,6 +65,7 @@ export class LlmService {
         prompt: input.prompt,
         maxTokens: input.maxTokens,
         temperature: input.temperature,
+        timeoutMs: input.timeoutMs,
       });
       if (cacheEnabled) {
         await this.cache.set(promptHash, input.model, result.raw);

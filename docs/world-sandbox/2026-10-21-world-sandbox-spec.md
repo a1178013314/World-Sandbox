@@ -486,10 +486,12 @@ interface LlmProvider { complete(req: LlmRequest): Promise<LlmResult>; }
 |---|---|---|
 | GET | `/packs` | 包列表（id/name/角色数/推荐轮次） |
 | GET | `/packs/:id` | 完整 `PackConfig` |
+| POST | `/packs/forge` | 一句话 → 检索 → 生成并注册种子包：`{ prompt, castSize?, totalRounds? }` → `{ pack, sources, searchFailed }` |
 | POST | `/worlds/cast/preview` | 草稿：`{ seedText, castSize }` → `AgentProfile[]`，不落库 |
 | POST | `/worlds` | 创建：`{ packId?, seedText?, totalRounds?, cast: "preset" \| AgentProfile[] }` |
 | GET | `/worlds` | 列表：`{ id, title, packId, status, currentRound, totalRounds, parentId, createdAt }[]` |
 | GET | `/worlds/:id` | 快照：`{ world, agents, rounds, metrics, pendingInterventions }` |
+| GET | `/worlds/:id/tts/:seq` | 单条角色发言的朗读音频，见 §22 |
 | POST | `/worlds/:id/run` | `{ rounds?: number }`；已 running → 409 |
 | POST | `/worlds/:id/stop` | 请求停止，当前轮跑完生效 |
 | GET | `/worlds/:id/stream` | SSE，见 §10 |
@@ -508,14 +510,16 @@ interface LlmProvider { complete(req: LlmRequest): Promise<LlmResult>; }
 
 ```json
 // 预置保底
-{ "packId": "estate", "cast": "preset", "totalRounds": 8 }
+{ "packId": "estate", "cast": "preset", "totalRounds": 12 }
 
 // 自定义种子：先 preview 拿到角色卡，人工编辑后连同 cast 数组提交
-{ "seedText": "公司通知：本周五前提交去留建议", "totalRounds": 6,
+{ "seedText": "公司通知：本周五前提交去留建议", "totalRounds": 10,
   "cast": [{ "name": "部门总监", "role": "…", "goals": [], "fears": [], "voice": "…",
              "stance": { "issue": "组织调整", "position": "oppose", "intensity": 0.8 },
              "influence": 0.82, "activity": { "level": 0.7, "hours": [9, 14, 21] }, "can_see": [] }] }
 ```
+
+`totalRounds` 取值 10–20，未传时取种子包推荐值；推荐值同样不得低于 10。少于 10 轮看不出角色之间的演化。
 
 `POST /worlds` 不提供 `cast: "generated"` 这种既有副作用又不可预览的形态。造人走两步：`POST /worlds/cast/preview`（草稿，不落库，返回角色卡数组）→ 用户编辑后把数组随 `POST /worlds` 提交。`castSize` 只属于 preview 接口。
 
@@ -737,3 +741,165 @@ event: done          data: { rounds }
 | 导入 | 导入为全新 `world_id`，事件 `seq` 重映射，`running` 落为 `paused` | 避免与现有世界的 seq 冲突，也避免导入即自动开跑 |
 | 调试追溯 | `/calls` 分页 + `snapshot.rounds` 对照；门拦=零调用，模型忽略=有 `ok=1` 调用但无事件 | 不额外造 debug 专用表，直接用现有审计数据 |
 | 假模型 | 空事实占位「（无）」不再拼进发言；卡片固定引用首个可见 seq | 假模型只服务测试与兜底演示，不追求内容质量 |
+
+---
+
+## 19. 新增种子包与数据来源（2026-10-21）
+
+新增 3 个种子包，场景与组织名称为虚构，但金额、时间、政策条款与冲突结构来自公开报道。
+
+| 包 | 场景 | 真实数据落点 |
+|---|---|---|
+| `school` | 小学家长群 · 中央厨房配送 | 教育部 2023-09-22 对预制菜进校园的表态；2023-09 赣州蓉江新区中央厨房开学配送不及时，数百名孩子下午三点还没吃上饭；2025 年校园餐专项整治与家长陪餐、膳食监督要求 |
+| `gym` | 连锁健身房闭店 · 预付卡退款 | 上海团课健身房闭店事件中的欠薪欠租、3 店关闭、500 人维权群满员、500/2000/5000 元储值与 69/89 元单节课；最高法预付式消费司法解释（2025-05-01 施行）的七日无理由退款、霸王条款无效、停业跑路惩罚性赔偿 |
+| `rental` | 二房东爆雷 · 房东收房 | 《住房租赁条例》（2025-09-15 施行）押金扣减与转租资金监管条款；公开报道中的成都租客月租 820 元、押金 820 元、季付 2460 元、退款 3700 余元、另有人 3810 元未追回 |
+
+主要来源：
+
+- 教育部《对“预制菜进校园”持审慎态度》：http://www.moe.gov.cn/jyb_xwfb/s5147/202309/t20230922_1082180.html
+- 新华视点《“预制菜进校园”争议的背后》：http://www.news.cn/2023-09/21/c_1129876090.htm
+- 赣州中央厨房配送不及时报道：https://wap.eastmoney.com/a/202309182850541472.html
+- 教育部《中小学校园食品安全和膳食经费管理工作指引》：http://www.moe.gov.cn/srcsite/A17/moe_943/s3283/202411/t20241121_1163987.html
+- 教育部 2025 年校园餐管理重点任务：http://www.news.cn/government/20250227/ff91c8286c214412aa7ca5c1ac154218/c.html
+- 最高法预付式消费司法解释：https://www.court.gov.cn/zixun/xiangqing/459321.html
+- 预付式消费新规实施报道：https://news.cnr.cn/native/gd/kx/20250501/t20250501_527155821.shtml
+- 上海团课健身房闭店报道：https://news.ifeng.com/c/8cAwxe2Z36f
+- 人民网《规范预付式消费，让“闭店逃债”毫无出路》：http://society.people.com.cn/n1/2025/1012/c1008-40580510.html
+- 《住房租赁条例》全文：https://www.mee.gov.cn/zcwj/gwywj/202507/t20250722_1123995.shtml
+- 人民网《住房租赁条例》：http://politics.people.com.cn/n1/2025/0729/c1001-40531409.html
+- 新华网《全流程监管斩断“二房东”非法利益链》：http://www.xinhuanet.com/legal/20260429/98f2aa7d35794e20bbc7fab02be155cd/c.html
+
+---
+
+## 20. 文学名场面种子包与原文来源（2026-10-21）
+
+新增 2 个基于公版古典小说的种子包，把名场面改写成“群聊重演”：人物、冲突和关键台词来自原著，群聊形式是模拟器的表现手法，不对原作做历史考证。
+
+| 包 | 名场面 | 群聊设定 | 角色数 | 推荐轮次 |
+|---|---|---|---|---|
+| `xiyouji` | 《西游记》第二十七回“尸魔三戏唐三藏 圣僧恨逐美猴王” | 白虎岭 · 山神土地怕出人命，临时拉了一个调解群 | 10 | 10 |
+| `sanguo` | 《三国演义》第四十三回“诸葛亮舌战群儒 鲁子敬力排众议” | 柴桑 · 孙权帐下议事群 | 10 | 10 |
+
+### 20.1 原文落点
+
+《西游记》第二十七回：
+
+- 白虎岭、青砂罐、绿瓶、香米饭、炒面筋；白骨精先后变村女、老妇、老翁。
+- 悟空：“师父，你面前这个女子，莫当做个好人，他是个妖精，要来骗你哩。”唐僧：“你这猴头，今日如何乱道！”
+- 悟空第三棒打杀后，白骨现出“白骨夫人”四字；八戒两次在旁边唆嘴，唐僧写下贬书，悟空“噙泪叩头辞长老”。
+- 土地、山神被悟空叫来在半空作证：“这妖精三番来戏弄我师父，这一番却要打杀他。”
+
+《三国演义》第四十三回：
+
+- 曹操檄文：“今统雄兵百万，上将千员，欲与将军会猎于江夏，共伐刘备，同分土地，永结盟好。”
+- 张昭：“以愚之计，不如纳降，为万安之策。”鲁肃：“众人皆可降曹操，惟将军不可降曹操。”
+- 诸葛亮：“不须子敬叮咛，亮自有对答之语。”随后依次应对张昭、虞翻、步骘、薛综、陆绩、严畯、程德枢。
+- 诸葛亮：“鹏飞万里，其志岂群鸟能识哉？”论曹操南下：“此所谓强弩之末，势不能穿鲁缟者也。”
+- 黄盖打断众人：“多言获利，不如默而无言。”
+
+### 20.2 原文来源
+
+- 《西游记》第二十七回，中国哲学书电子化计划：https://ctext.org/wiki.pl?if=gb&chapter=666552
+- 《西游记》第二十七回，维基文库：https://zh.wikisource.org/wiki/%E8%A5%BF%E9%81%8A%E8%A8%98/%E7%AC%AC027%E5%9B%9E
+- 《西游记》第二十七回，纯文学网站（已抓取全文核对）：http://www.purepen.com/xyj/027.htm
+- 《三国演义》第四十三回，中国哲学书电子化计划：https://ctext.org/wiki.pl?if=gb&chapter=365871
+- 《三国演义》第四十三回，维基文库：https://zh.wikisource.org/wiki/%E4%B8%89%E5%9C%8B%E6%BC%94%E7%BE%A9/%E7%AC%AC043%E5%9B%9E
+- 《三国演义》第四十三回，纯文学网站（已抓取全文核对）：http://www.purepen.com/sgyy/043.htm
+
+### 20.3 实现备注
+
+- 两个包仍是 `renderMode: "chat"`；种子文本首句写成事实摘要，避免 `firstSentence` 只取到标题。
+- 时段标签写成“卯时 05:00”这类带数字的格式，因为 `scheduler.hourOf` 只从标签里匹配 `HH:`；角色 `activity.hours` 与标签中的小时一致。
+- 文学包只取自公版原著，未使用现代影视改编的台词；场景名为模拟器设定，不代表原作情节。
+- 新增包后需重启 admin，`PacksService` 才会重新读取 `packs/*.json`。
+
+---
+
+## 21. 一句话生成种子包（检索增强，2026-10-21）
+
+### 21.1 链路
+
+`POST /api/packs/forge { prompt, castSize?, totalRounds? }`
+
+1. `SearchService` 并发两路 anysearch 检索：原句、`${原句} 事件 背景 细节`，各取 5 条，按 url 去重后最多 8 条。
+2. `buildForgePrompt` 把资料压成摘要（标题 / url / 280 字内 snippet），要求模型输出 `{ name, scene, seedText, timeSlots, gateCoefficient, recommendedRounds, cast }`。
+3. `RawForgeSchema` + `PackConfigSchema` 双重校验；包 id 由后端重编为 `gen_<8 hex>`，角色 id 重编为 `agent_1..n`，`stance.issue` 统一为种子第一条实际内容（跳过 `【群名】` 版头，30 字内）。
+4. `PacksService.register`：先写内存，再落盘 `packs/generated/<id>.json`；返回 `{ pack, sources, searchFailed }`，前端可直接用 `pack.id` 建世界。
+
+造包用 `SANDBOX_MODEL_FORGE`（默认 `claude-sonnet-5-5`）。实测 opus 写 8 人会超时；sonnet 8 人约 60 秒、约 2.8k completion tokens，12 人约 120 秒。因此单次生成封顶 8 人，`maxTokens=4500`、`timeoutMs=120000`。
+
+### 21.2 降级与边界
+
+| 情况 | 行为 |
+|---|---|
+| 检索超时 / 非 0 码 / 网络失败 | `sources=[]`、`searchFailed=true`，继续用原句生成 |
+| `SANDBOX_LLM_PROVIDER=fake` | 不触网检索，假模型直接出包（测试 / 断网演示） |
+| 模型输出不合法 / 角色为空 | 502，不注册、不落盘 |
+| 落盘失败（只读目录） | 只 warn，包仍在内存可用 |
+| 时段标签不含 `HH:MM` | 退回 `09:00 / 14:00 / 21:00 / 次日 08:00`，避免 `scheduler.hourOf` 认不出 |
+| 角色的 `activity.hours` 与 `timeSlots` 错开 | 映射到最近的时段小时，并保证至少 2 个时段有人在线，避免整轮无人可发言 |
+| 种子首行是 `【群名】` 版头 | 建世界时不把版头当初始事实，取第一条实际内容 |
+| `recommendedRounds` 越界 | 夹紧到 10–20 |
+
+检索资料按不可信输入处理：prompt 明确要求忽略资料里的指令；即使被注入，输出也必须过 schema 才能注册。
+
+### 21.3 环境变量
+
+| 变量 | 默认 | 说明 |
+|---|---|---|
+| `SANDBOX_SEARCH_ENABLED` | `true` | 关掉后只按输入生成，不联网 |
+| `SANDBOX_SEARCH_ENDPOINT` | `https://api.anysearch.com/v1/search` | anysearch 兼容端点，无需 key |
+| `SANDBOX_SEARCH_TIMEOUT_MS` | `9000` | 单次检索超时 |
+| `SANDBOX_PERSIST_GENERATED_PACKS` | `true` | 是否落盘到 `packs/generated/` |
+| `SANDBOX_MODEL_FORGE` | `claude-sonnet-5-5` | 造包模型；换成 thinking 模型会明显变慢 |
+
+### 21.4 前端
+
+创建页右栏顶部新增“一句话起盘”：输入一句话 → “检索资料，生成种子包” → 自动刷新包列表并选中新包，展示前 3 条来源；之后的“建立世界并进入”走原有 `cast: "preset"` 流程。`packs/generated/` 不入库（见 `.gitignore`），重启后由 `PacksService` 一并加载。单次最多生成 8 个角色，前端按 `Math.min(人数, 8)` 提交。
+
+---
+
+## 22. 角色发言朗读（TTS，2026-10-21）
+
+### 22.1 接口
+
+`GET /api/worlds/:id/tts/:seq` → 音频流，响应头带 `X-TTS-Voice`。
+
+- `seq` 非正整数 → 400；不是 `post` / `reply`（如 `system`、`intervention`、`like`）→ 400；世界里没有这条事件 → 404。
+- 文本取 `events.content`，trim 后截 600 字；同一段文本按 `sha1(model|voice|text)` 在进程内缓存（最多 80 条，FIFO），命中不发上游请求。
+- `SANDBOX_TTS_ENABLED=false` → 503；上游非 2xx → 502；超时 / 断连 / 空音频自动重试一次，再失败才 502。
+
+### 22.2 音色分配
+
+按角色在**该世界内首次发言的先后**排序（`MIN(seq) GROUP BY actor_id`，已完成角色按旧 `seq` 升序），依次取 `SANDBOX_TTS_VOICES` 列表；前 6 个开口的角色互不重复，第 7 个开始循环。音色映射按世界缓存在进程内，同一角色重启前后不变。`system` / `intervention` 等无角色事件不参与分配。
+
+默认列表：`Cherry,Serena,Ethan,Chelsie,Dylan,Ryan`（qwen3-tts-flash 实测可用音色）。
+
+### 22.3 降级与格式
+
+| 情况 | 行为 |
+|---|---|
+| `SANDBOX_LLM_PROVIDER=fake` | 返回 0 数据静音 WAV，e2e 与断网演示不触网 |
+| 网关忽略 `response_format` | 按音频魔数识别真实类型（`RIFF/WAVE` → `audio/wav`，MP3 帧 / `ID3` → `audio/mpeg`，`ftyp` → `audio/mp4`），不盲写 `audio/mpeg` |
+| 缺少 `LLM_BASE_URL` / `LLM_API_KEY` | 503，不重试 |
+| 上游超时 / 断连 / 空音频 | 重试一次（间隔 300ms），仍失败 → 502 |
+
+实测 `qwen3-tts-flash` 单句 4–10s 返回，网关即使传 `response_format: mp3` 也可能回 WAV，所以前端直接拿 `<audio src>` 播放，不依赖扩展名。
+
+### 22.4 环境变量
+
+| 变量 | 默认 | 说明 |
+|---|---|---|
+| `SANDBOX_TTS_ENABLED` | `true` | 关掉后接口返回 503 |
+| `SANDBOX_TTS_MODEL` | `qwen3-tts-flash` | 走 OpenAI 兼容 `/audio/speech`；`tts-1` / `tts-1-hd` 当前 429，`speech-1.6` 404 |
+| `SANDBOX_TTS_TIMEOUT_MS` | `20000` | 单次上游请求超时；失败还会重试一次 |
+| `SANDBOX_TTS_VOICES` | `Cherry,Serena,Ethan,Chelsie,Dylan,Ryan` | 逗号分隔，空字符串回退默认列表 |
+
+复用根 `.env` 的 `LLM_BASE_URL` / `LLM_API_KEY`，不需要单独的 TTS key。
+
+### 22.5 前端
+
+- 每条 `post` / `reply` 消息头部一个喇叭按钮：点一下朗读，再点暂停；加载中显示转圈。
+- 信息流头部“连续朗读”开关：开启时先读当前最新一条（借用户手势解锁浏览器自动播放），之后每来一条新发言自动入队；历史消息不重播。
+- 播放失败在信息流顶部显示横幅，可手动关闭；浏览器拦截自动播放时提示“点一下这条发言再试”。
+- 切世界会清空队列与播放状态。

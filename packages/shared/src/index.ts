@@ -17,8 +17,10 @@ export {
   REPLY_MAX_CHARS,
 } from "./sandbox/action";
 export {
+  type ForgePackResult,
   type PackConfig,
   PackConfigSchema,
+  type PackSource,
   type PackSummary,
   summarizePack,
 } from "./sandbox/pack";
@@ -51,6 +53,8 @@ export {
   type SeedConfig,
   type StancePosition,
   StancePositionSchema,
+  WORLD_MAX_ROUNDS,
+  WORLD_MIN_ROUNDS,
   type WorldRecord,
   type WorldSnapshot,
   type WorldStatus,

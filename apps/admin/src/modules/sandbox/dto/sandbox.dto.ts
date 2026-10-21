@@ -1,3 +1,4 @@
+import { WORLD_MAX_ROUNDS, WORLD_MIN_ROUNDS } from "@ifss/shared";
 import { Type } from "class-transformer";
 import {
   IsDefined,
@@ -25,6 +26,27 @@ export class PreviewCastDto {
   castSize!: number;
 }
 
+export class ForgePackDto {
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(300)
+  prompt!: string;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(3)
+  @Max(12)
+  castSize?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(WORLD_MIN_ROUNDS)
+  @Max(WORLD_MAX_ROUNDS)
+  totalRounds?: number;
+}
+
 export class CreateWorldDto {
   @IsOptional()
   @IsString()
@@ -38,8 +60,8 @@ export class CreateWorldDto {
   @IsOptional()
   @Type(() => Number)
   @IsInt()
-  @Min(1)
-  @Max(20)
+  @Min(WORLD_MIN_ROUNDS)
+  @Max(WORLD_MAX_ROUNDS)
   totalRounds?: number;
 
   @IsDefined()
@@ -51,7 +73,7 @@ export class RunWorldDto {
   @Type(() => Number)
   @IsInt()
   @Min(1)
-  @Max(20)
+  @Max(WORLD_MAX_ROUNDS)
   rounds?: number;
 }
 

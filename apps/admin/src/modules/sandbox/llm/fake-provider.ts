@@ -50,6 +50,9 @@ export class FakeProvider implements LlmProvider {
     if (request.purpose === "card") {
       return this.renderCards(request.prompt);
     }
+    if (request.purpose === "pack") {
+      return this.renderPack(request.prompt, hash);
+    }
     if (request.purpose === "compact") {
       return "记忆压缩：物业费要涨的事还没说清，很多人等着看明细。";
     }
@@ -130,6 +133,41 @@ export class FakeProvider implements LlmProvider {
         );
     const cited = absent ? [] : [seqs[0], 999_999].filter((value) => value !== undefined);
     return JSON.stringify({ answer, cited });
+  }
+
+  private renderPack(prompt: string, hash: number): string {
+    const topic = marker(prompt, "一句话").slice(0, 24) || "群里刚发的通知";
+    const size = Number(prompt.match(/角色数量：(\d+)/)?.[1] ?? 8);
+    const rounds = Number(prompt.match(/推荐轮次：(\d+)/)?.[1] ?? 12);
+    const cast = Array.from({ length: size }, (_, index) => ({
+      id: `agent_${index + 1}`,
+      name: pick(
+        ["周女士", "老陈", "小林", "阿杰", "刘老师", "王师傅", "赵老板", "婷婷"],
+        hash + index,
+      ),
+      role: pick(["当事人", "执行方", "规则方", "旁观者"], hash + index * 3),
+      goals: ["先把事实弄清"],
+      fears: ["被人当枪使"],
+      voice: pick(["短句、爱追问", "说话留半句", "爱算账", "先讲规矩"], hash + index * 5),
+      stance: {
+        issue: topic,
+        position: index % 3 === 0 ? "oppose" : index % 3 === 1 ? "support" : "neutral",
+        intensity: 0.4 + (index % 4) * 0.1,
+      },
+      influence: Math.min(0.95, 0.3 + index * 0.05),
+      activity: { level: 0.35 + (index % 4) * 0.1, hours: [9, 14, 21] },
+      can_see: ["本群消息"],
+    }));
+
+    return JSON.stringify({
+      name: `${topic} · 群聊`,
+      scene: `${topic} 群`,
+      seedText: `${topic}，群里已经有人开始追问细节。\n【${topic} 群】\n有人贴出一张截图，金额和落款还没人对上。\n（群聊口吻，别写新闻稿。）`,
+      timeSlots: ["09:00", "14:00", "21:00"],
+      gateCoefficient: 1,
+      recommendedRounds: rounds,
+      cast,
+    });
   }
 
   private renderCards(prompt: string): string {

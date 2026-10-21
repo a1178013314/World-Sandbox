@@ -1,0 +1,110 @@
+{
+  "id": "company",
+  "name": "产品研发部 · 组织调整",
+  "renderMode": "chat",
+  "seed": {
+    "text": "【产品研发部 · 全员群】\n各位：受组织架构调整影响，本周五前请各组长提交本组成员去留建议。\nQ4 绩效名单下周公布，请大家正常推进手头项目。\n—— HRBP 林",
+    "scene": "产品研发部 · 全员群",
+    "timeSlots": ["09:30", "12:00", "15:00", "20:00"],
+    "gateCoefficient": 0.7
+  },
+  "recommendedRounds": 10,
+  "initialCast": [
+    {
+      "id": "bu_men_zong_jian",
+      "name": "部门总监",
+      "role": "研发总监 · 管 60 人",
+      "goals": ["保住团队", "向上有个交代"],
+      "fears": ["自己被当成阻力"],
+      "voice": "稳重、讲业务，爱说「从业务角度看」",
+      "stance": { "issue": "组织架构调整", "position": "oppose", "intensity": 0.65 },
+      "influence": 0.88,
+      "activity": { "level": 0.7, "hours": [9, 15, 20] },
+      "can_see": ["本群消息", "管理层会议纪要"]
+    },
+    {
+      "id": "hrbp_lin",
+      "name": "HRBP 林",
+      "role": "HRBP · 执行调整",
+      "goals": ["按流程走完", "别留下书面把柄"],
+      "fears": ["被截图传出去"],
+      "voice": "模板化、无情绪，句尾常带「感谢配合」",
+      "stance": { "issue": "组织架构调整", "position": "support", "intensity": 0.7 },
+      "influence": 0.82,
+      "activity": { "level": 0.85, "hours": [9, 12, 15] },
+      "can_see": ["本群消息", "HR 系统名单"]
+    },
+    {
+      "id": "zu_zhang_a",
+      "name": "组长 A",
+      "role": "负责交易链路的组长",
+      "goals": ["保自己人", "把功劳说清楚"],
+      "fears": ["组员被拆走项目烂尾"],
+      "voice": "护短、讲功劳，爱列「我们组今年做了」",
+      "stance": { "issue": "组织架构调整", "position": "oppose", "intensity": 0.8 },
+      "influence": 0.7,
+      "activity": { "level": 0.8, "hours": [9, 12, 20] },
+      "can_see": ["本群消息", "项目周报"]
+    },
+    {
+      "id": "zu_zhang_b",
+      "name": "组长 B",
+      "role": "负责中台的组长",
+      "goals": ["借机换血", "拿下更多人力"],
+      "fears": ["被说趁火打劫"],
+      "voice": "客观、话里有话，常说「我同意，但是不是可以更激进一点」",
+      "stance": { "issue": "组织架构调整", "position": "support", "intensity": 0.75 },
+      "influence": 0.68,
+      "activity": { "level": 0.75, "hours": [9, 15, 20] },
+      "can_see": ["本群消息", "人力盘点表"]
+    },
+    {
+      "id": "lao_yuan_gong",
+      "name": "老员工",
+      "role": "司龄 9 年 · 高级工程师",
+      "goals": ["安稳干到退休", "别被优化"],
+      "fears": ["被年轻人顶替"],
+      "voice": "阴阳、爱提当年，常说「以前我们那会儿」",
+      "stance": { "issue": "组织架构调整", "position": "oppose", "intensity": 0.6 },
+      "influence": 0.55,
+      "activity": { "level": 0.5, "hours": [12, 15, 20] },
+      "can_see": ["本群消息", "老同事小群"]
+    },
+    {
+      "id": "ying_jie_sheng",
+      "name": "应届生",
+      "role": "入职 8 个月",
+      "goals": ["留下来", "别被记住名字"],
+      "fears": ["试用期被延长"],
+      "voice": "小心翼翼、表忠心，常发「收到」「我跟上」",
+      "stance": { "issue": "组织架构调整", "position": "support", "intensity": 0.4 },
+      "influence": 0.3,
+      "activity": { "level": 0.65, "hours": [9, 15] },
+      "can_see": ["本群消息", "被点名"]
+    },
+    {
+      "id": "yun_fu",
+      "name": "孕妇",
+      "role": "入职 3 年 · 孕 6 个月",
+      "goals": ["别被针对", "留好证据"],
+      "fears": ["被以调整名义调岗"],
+      "voice": "克制、留证据，常说「方便的话书面同步一下」",
+      "stance": { "issue": "组织架构调整", "position": "procedural", "intensity": 0.6 },
+      "influence": 0.5,
+      "activity": { "level": 0.55, "hours": [9, 12, 15] },
+      "can_see": ["本群消息", "考勤与合同记录"]
+    },
+    {
+      "id": "wai_bao",
+      "name": "外包",
+      "role": "驻场外包 · 不在编制",
+      "goals": ["别被清退", "少说话"],
+      "fears": ["第一个被砍"],
+      "voice": "沉默、偶尔问一句，语气客气疏离",
+      "stance": { "issue": "组织架构调整", "position": "neutral", "intensity": 0.2 },
+      "influence": 0.18,
+      "activity": { "level": 0.25, "hours": [12, 20] },
+      "can_see": ["本群消息"]
+    }
+  ]
+}

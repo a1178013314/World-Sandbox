@@ -20,7 +20,8 @@ export function buildCardsPrompt(input: CardsPromptInput): string {
 
   return `[system] 你是群聊世界的观察者。挑出 3 个「名场面」，让人一眼看见刚才发生了什么。
 只输出 JSON，不要 markdown。type 只能是 出圈 / 分歧 / 沉默 / 转折。
-ref 必须来自下面出现过的真实 seq，quote 必须能在原文中找到依据，why 一句话。
+ref 必须来自下面出现过的真实 seq。
+quote 必须是原文里连续的一句，不要改写、不要拼接；why 用一句人话，说清这张为什么成立，不要「体现了」「折射出」「值得深思」。
 场景：${input.scene}
 可引用 seq：${input.events.map((event) => event.seq).join(",") || "无"}
 指标：${metrics}

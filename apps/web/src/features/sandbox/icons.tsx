@@ -27,6 +27,19 @@ export const PlayIcon = (props: IconProps) => (
   </Icon>
 );
 
+export const PauseIcon = (props: IconProps) => (
+  <Icon {...props}>
+    <path d="M9 5.5v13M15 5.5v13" />
+  </Icon>
+);
+
+export const SpeakerIcon = (props: IconProps) => (
+  <Icon {...props}>
+    <path d="M4 9.5h3l4-3v11l-4-3H4z" />
+    <path d="M15 9a4 4 0 0 1 0 6M17.5 6.5a7.5 7.5 0 0 1 0 11" />
+  </Icon>
+);
+
 export const StopIcon = (props: IconProps) => (
   <Icon {...props}>
     <rect x="6" y="6" width="12" height="12" rx="1.5" />

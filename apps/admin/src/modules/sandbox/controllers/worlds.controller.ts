@@ -1,6 +1,17 @@
 import { randomUUID } from "node:crypto";
-import { Body, Controller, Delete, Get, Param, Post, Query } from "@nestjs/common";
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  Query,
+  Res,
+} from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
+import type { Response } from "express";
 import { Repository } from "typeorm";
 import {
   CallsQueryDto,
@@ -17,6 +28,7 @@ import { CardsService } from "../services/cards";
 import { CastService } from "../services/cast";
 import { InterviewService } from "../services/interview";
 import { LoopService } from "../services/loop";
+import { TtsService } from "../services/tts";
 import { WorldService } from "../services/world";
 
 @Controller("worlds")
@@ -27,6 +39,7 @@ export class WorldsController {
     private readonly cast: CastService,
     private readonly interview: InterviewService,
     private readonly cards: CardsService,
+    private readonly tts: TtsService,
     @InjectRepository(CallEntity)
     private readonly calls: Repository<CallEntity>,
   ) {}
@@ -68,6 +81,26 @@ export class WorldsController {
   @Get(":id/events")
   events(@Param("id") id: string, @Query() query: EventsQueryDto) {
     return this.worlds.eventList(id, query.round);
+  }
+
+  @Get(":id/tts/:seq")
+  async narrate(
+    @Param("id") id: string,
+    @Param("seq") seq: string,
+    @Res() res: Response,
+  ): Promise<void> {
+    const value = Number(seq);
+    if (!Number.isInteger(value) || value <= 0) {
+      throw new BadRequestException("seq 必须是正整数");
+    }
+    const audio = await this.tts.audioForEvent(id, value);
+    res.set({
+      "Content-Type": audio.contentType,
+      "Content-Length": String(audio.buffer.length),
+      "Cache-Control": "public, max-age=86400",
+      "X-TTS-Voice": audio.voice,
+    });
+    res.end(audio.buffer);
   }
 
   @Post(":id/run")

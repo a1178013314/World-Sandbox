@@ -24,7 +24,10 @@ import { CardsService } from "./services/cards";
 import { CastService } from "./services/cast";
 import { InterviewService } from "./services/interview";
 import { LoopService } from "./services/loop";
+import { PackForgeService } from "./services/pack-forge";
 import { PacksService } from "./services/packs";
+import { SearchService } from "./services/search";
+import { TtsService } from "./services/tts";
 import { WorldService } from "./services/world";
 
 const ENTITIES = [
@@ -63,6 +66,9 @@ const ENTITIES = [
     LlmService,
     SandboxRuntime,
     PacksService,
+    SearchService,
+    PackForgeService,
+    TtsService,
     CastService,
     ActorService,
     InterviewService,

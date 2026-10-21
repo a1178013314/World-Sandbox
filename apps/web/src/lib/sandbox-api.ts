@@ -1,6 +1,7 @@
 import type {
   AgentProfile,
   EmergenceCard,
+  ForgePackResult,
   PackConfig,
   PackSummary,
   SandboxEvent,
@@ -59,6 +60,9 @@ export interface WorldExport {
 export const sandboxApi = {
   packs: () => apiFetch<PackSummary[]>("/packs"),
   pack: (id: string) => apiFetch<PackConfig>(`/packs/${id}`),
+  /** 一句话 → 联网检索 → 生成并注册种子包；生成后可直接用 pack.id 建世界。 */
+  forgePack: (input: { prompt: string; castSize?: number; totalRounds?: number }) =>
+    apiFetch<ForgePackResult>("/packs/forge", { method: "POST", body: input }),
   previewCast: (seedText: string, castSize: number) =>
     apiFetch<AgentProfile[]>("/worlds/cast/preview", {
       method: "POST",
@@ -107,6 +111,8 @@ export const sandboxApi = {
   exportWorld: (id: string) => apiFetch<WorldExport>(`/worlds/${id}/export`),
   importWorld: (payload: unknown) =>
     apiFetch<{ id: string }>("/worlds/import", { method: "POST", body: payload }),
+  /** 单条发言的朗读音频；直接给 <audio src> 用，不走 apiFetch。 */
+  ttsUrl: (id: string, seq: number) => `/api/worlds/${id}/tts/${seq}`,
   streamUrl: (id: string, lastEventId?: number) =>
     `/api/worlds/${id}/stream${lastEventId === undefined ? "" : `?lastEventId=${lastEventId}`}`,
 };

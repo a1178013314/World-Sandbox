@@ -11,6 +11,8 @@ import {
   type SandboxEvent,
   type SandboxMetrics,
   type SeedConfig,
+  WORLD_MAX_ROUNDS,
+  WORLD_MIN_ROUNDS,
   type WorldRecord,
   type WorldSnapshot,
 } from "@ifss/shared";
@@ -65,13 +67,15 @@ interface WorldExport {
   snapshots: AgentSnapshotEntity[];
 }
 
+/** 种子首行常是【群名】版头，跳过它，别把群名当成初始事实。 */
 function firstSentence(text: string): string {
-  return (
+  const content =
     text
       .trim()
-      .split(/[。！？!?\n]/)[0]
-      ?.slice(0, 40) ?? text.slice(0, 40)
-  );
+      .split(/[。！？!?\n]/)
+      .map((part) => part.trim())
+      .find((part) => part.length > 0 && !/^【[^】]{0,40}】$/.test(part)) ?? text.trim();
+  return content.slice(0, 40);
 }
 
 function initialBelief(fact: string, ref: number): AgentBelief {
@@ -217,8 +221,8 @@ export class WorldService {
       renderMode: "chat",
     };
     const totalRounds = Math.min(
-      20,
-      Math.max(1, input.totalRounds ?? pack?.recommendedRounds ?? 8),
+      WORLD_MAX_ROUNDS,
+      Math.max(WORLD_MIN_ROUNDS, input.totalRounds ?? pack?.recommendedRounds ?? WORLD_MIN_ROUNDS),
     );
     const id = randomUUID();
     const now = new Date().toISOString();

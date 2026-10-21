@@ -22,4 +22,28 @@ describe("FakeProvider", () => {
     }
     throw new Error("假模型没有给出任何发言");
   });
+
+  it("pack 用途返回可解析的造包 JSON", async () => {
+    const provider = new FakeProvider();
+    const { raw } = await provider.complete({
+      purpose: "pack",
+      model: "fake",
+      prompt: "一句话：小区物业费从 2.8 涨到 3.8\n角色数量：6\n推荐轮次：14",
+      maxTokens: 4000,
+      temperature: 0.7,
+    });
+    const parsed = JSON.parse(raw) as {
+      name: string;
+      seedText: string;
+      timeSlots: string[];
+      recommendedRounds: number;
+      cast: unknown[];
+    };
+
+    expect(parsed.name).toContain("小区物业费从 2.8 涨到 3.8");
+    expect(parsed.seedText.length).toBeGreaterThan(0);
+    expect(parsed.timeSlots.length).toBeGreaterThanOrEqual(2);
+    expect(parsed.recommendedRounds).toBe(14);
+    expect(parsed.cast).toHaveLength(6);
+  });
 });

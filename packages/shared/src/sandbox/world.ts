@@ -1,5 +1,10 @@
 import { z } from "zod";
 
+/** 世界总轮次下限：少于 10 轮看不出角色之间的演化。 */
+export const WORLD_MIN_ROUNDS = 10;
+/** 世界总轮次上限：受调用预算与演示时长限制。 */
+export const WORLD_MAX_ROUNDS = 20;
+
 export const WorldStatusSchema = z.enum(["ready", "running", "paused", "done"]);
 export type WorldStatus = z.infer<typeof WorldStatusSchema>;
 

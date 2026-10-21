@@ -7,7 +7,7 @@ import { LlmService } from "../llm/llm.service";
 import { buildCastPrompt } from "../prompts/cast";
 import { extractJson } from "./json";
 
-const RawProfileSchema = z.object({
+export const RawProfileSchema = z.object({
   id: z.string().optional(),
   name: z.string().trim().min(1),
   role: z.string().optional(),
@@ -44,6 +44,50 @@ export interface PreviewCastInput {
   worldId: string;
   seedText: string;
   castSize: number;
+}
+
+/** 模型给的野角色 → 可入库的角色卡；缺字段补默认值，id 由后端重编。 */
+export function toAgentProfiles(
+  list: z.infer<typeof RawProfileSchema>[],
+  issue: string,
+  size: number,
+  onMissing?: (index: number, missing: string[]) => void,
+): AgentProfile[] {
+  return list.slice(0, size).map((item, index) => {
+    const missing: string[] = [];
+    if (!item.role) missing.push("role");
+    if (!item.stance?.issue) missing.push("stance.issue");
+    if (!item.stance?.position) missing.push("stance.position");
+    if (item.influence === undefined) missing.push("influence");
+    if (!item.activity?.hours?.length) missing.push("activity.hours");
+    if (missing.length > 0) {
+      onMissing?.(index, missing);
+    }
+
+    const hours = (item.activity?.hours ?? []).filter(
+      (hour) => Number.isInteger(hour) && hour >= 0 && hour <= 23,
+    );
+    const candidate = {
+      id: `agent_${index + 1}`,
+      name: item.name,
+      role: item.role?.trim() || "群成员",
+      goals: item.goals ?? [],
+      fears: item.fears ?? [],
+      voice: item.voice ?? "",
+      stance: {
+        issue: item.stance?.issue?.trim() || issue,
+        position: item.stance?.position ?? "neutral",
+        intensity: clamp(item.stance?.intensity ?? 0.5, 0, 1),
+      },
+      influence: clamp(item.influence ?? 0.4, 0, 1),
+      activity: {
+        level: clamp(item.activity?.level ?? 0.5, 0, 1),
+        hours: hours.length > 0 ? hours.slice(0, 8) : [9, 21],
+      },
+      can_see: item.can_see ?? ["本群消息"],
+    };
+    return AgentProfileSchema.parse(candidate);
+  });
 }
 
 @Injectable()
@@ -87,43 +131,13 @@ export class CastService {
         .trim()
         .split(/[。！？\n]/)[0]
         ?.slice(0, 30) || "当前议题";
-    return list.slice(0, size).map((item, index) => {
-      const missing: string[] = [];
-      if (!item.role) missing.push("role");
-      if (!item.stance?.issue) missing.push("stance.issue");
-      if (!item.stance?.position) missing.push("stance.position");
-      if (item.influence === undefined) missing.push("influence");
-      if (!item.activity?.hours?.length) missing.push("activity.hours");
+    return toAgentProfiles(list, issue, size, (index, missing) => {
       if (missing.length > 0) {
         this.logger.warnWithFields("造人结果字段缺失，已补默认值", {
           index,
           missing,
         });
       }
-
-      const hours = (item.activity?.hours ?? []).filter(
-        (hour) => Number.isInteger(hour) && hour >= 0 && hour <= 23,
-      );
-      const candidate = {
-        id: `agent_${index + 1}`,
-        name: item.name,
-        role: item.role?.trim() || "群成员",
-        goals: item.goals ?? [],
-        fears: item.fears ?? [],
-        voice: item.voice ?? "",
-        stance: {
-          issue: item.stance?.issue?.trim() || issue,
-          position: item.stance?.position ?? "neutral",
-          intensity: clamp(item.stance?.intensity ?? 0.5, 0, 1),
-        },
-        influence: clamp(item.influence ?? 0.4, 0, 1),
-        activity: {
-          level: clamp(item.activity?.level ?? 0.5, 0, 1),
-          hours: hours.length > 0 ? hours.slice(0, 8) : [9, 21],
-        },
-        can_see: item.can_see ?? ["本群消息"],
-      };
-      return AgentProfileSchema.parse(candidate);
     });
   }
 }

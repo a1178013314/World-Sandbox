@@ -39,7 +39,7 @@ describe("世界沙盘 e2e", () => {
 
     const created = await request(app.getHttpServer())
       .post("/api/worlds")
-      .send({ packId: "estate", cast: "preset", totalRounds: 3 })
+      .send({ packId: "estate", cast: "preset", totalRounds: 10 })
       .expect(201);
     const worldId = created.body.id as string;
 
@@ -53,8 +53,8 @@ describe("世界沙盘 e2e", () => {
     const snapshot = await waitDone(app, worldId);
 
     expect(snapshot.world.status).toBe("done");
-    expect(snapshot.world.currentRound).toBe(3);
-    expect(snapshot.rounds).toHaveLength(3);
+    expect(snapshot.world.currentRound).toBe(10);
+    expect(snapshot.rounds).toHaveLength(10);
     for (const round of snapshot.rounds) {
       expect(round.spokeIds.every((id) => round.activeIds.includes(id))).toBe(true);
       expect(round.gatedIds.every((id) => !round.spokeIds.includes(id))).toBe(true);
@@ -77,6 +77,20 @@ describe("世界沙盘 e2e", () => {
     });
     expect(interventionDeliveries.length).toBeGreaterThan(0);
     expect(interventionDeliveries.every((row) => activeRound2.has(row.agentId))).toBe(true);
+
+    const speechEvent = events.find((event) => event.kind === "post" || event.kind === "reply");
+    expect(speechEvent).toBeDefined();
+    const tts = await request(app.getHttpServer())
+      .get(`/api/worlds/${worldId}/tts/${speechEvent?.seq ?? 0}`)
+      .expect(200);
+    expect(String(tts.headers["content-type"])).toContain("audio/");
+    expect(Number(tts.headers["content-length"])).toBeGreaterThan(0);
+    expect(String(tts.headers["x-tts-voice"])).not.toBe("");
+
+    await request(app.getHttpServer())
+      .get(`/api/worlds/${worldId}/tts/${interventionEvent?.seq ?? 0}`)
+      .expect(400);
+    await request(app.getHttpServer()).get(`/api/worlds/${worldId}/tts/999999`).expect(404);
 
     const forked = await request(app.getHttpServer())
       .post(`/api/worlds/${worldId}/fork`)
@@ -102,7 +116,7 @@ describe("世界沙盘 e2e", () => {
     expect(offline).toBeDefined();
     const interview = await request(app.getHttpServer())
       .post(`/api/worlds/${worldId}/interview`)
-      .send({ agentId: offline?.agentId, question: "第 3 轮群里都说了什么？" })
+      .send({ agentId: offline?.agentId, question: "第 10 轮群里都说了什么？" })
       .expect(201);
     expect(typeof interview.body.answer).toBe("string");
     expect(interview.body.cited).toEqual([]);
@@ -117,7 +131,7 @@ describe("世界沙盘 e2e", () => {
   it("分段 run 结束后回到 ready，可以继续跑下一段", async () => {
     const created = await request(app.getHttpServer())
       .post("/api/worlds")
-      .send({ packId: "estate", cast: "preset", totalRounds: 3 })
+      .send({ packId: "estate", cast: "preset", totalRounds: 10 })
       .expect(201);
     const worldId = created.body.id as string;
 
@@ -141,13 +155,13 @@ describe("世界沙盘 e2e", () => {
     await request(app.getHttpServer()).post(`/api/worlds/${worldId}/run`).send({}).expect(201);
     const finished = await waitDone(app, worldId);
     expect(finished.world.status).toBe("done");
-    expect(finished.world.currentRound).toBe(3);
+    expect(finished.world.currentRound).toBe(10);
   });
 
   it("同一世界重复 run 返回 409，done 后 run 返回 400", async () => {
     const created = await request(app.getHttpServer())
       .post("/api/worlds")
-      .send({ packId: "estate", cast: "preset", totalRounds: 1 })
+      .send({ packId: "estate", cast: "preset", totalRounds: 10 })
       .expect(201);
     await request(app.getHttpServer())
       .post(`/api/worlds/${created.body.id}/run`)

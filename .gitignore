@@ -11,3 +11,5 @@ data/
 .vite/
 # 含明文凭据（服务器/PG/Redis 密码），禁止入库
 docs/static/
+# 一句话生成的种子包（运行产物，可重新生成）
+packs/generated/

@@ -17,6 +17,7 @@ export class OpenAiProvider implements LlmProvider {
   async complete(request: LlmRequest): Promise<LlmResult> {
     const startedAt = Date.now();
     const endpoint = `${this.baseUrl.replace(/\/$/, "")}/chat/completions`;
+    const timeoutMs = request.timeoutMs ?? this.timeoutMs;
 
     let response: Response;
     try {
@@ -34,12 +35,12 @@ export class OpenAiProvider implements LlmProvider {
           response_format: { type: "json_object" },
           stream: false,
         }),
-        signal: AbortSignal.timeout(this.timeoutMs),
+        signal: AbortSignal.timeout(timeoutMs),
       });
     } catch (error) {
       throw new LlmError(
         error instanceof Error && error.name === "TimeoutError"
-          ? `模型调用超时（${this.timeoutMs}ms）`
+          ? `模型调用超时（${timeoutMs}ms）`
           : `模型调用失败：${error instanceof Error ? error.message : String(error)}`,
       );
     }
