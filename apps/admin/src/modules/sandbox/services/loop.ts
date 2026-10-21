@@ -457,7 +457,7 @@ export class LoopService {
       injected,
     );
 
-    await this.compactMemories(world, round, profiles, activeSet, updatedAgents);
+    await this.compactMemories(world, round, profiles, new Set(asked), updatedAgents);
     await this.agents.save(updatedAgents);
 
     const silentIds = activeIds.filter((id) => !spokeIds.includes(id));
@@ -716,7 +716,7 @@ export class LoopService {
     world: WorldEntity,
     round: number,
     profiles: AgentProfile[],
-    activeSet: Set<string>,
+    askedSet: Set<string>,
     agents: AgentEntity[],
   ): Promise<void> {
     const used = await this.calls.count({ where: { worldId: world.id, purpose: "compact" } });
@@ -724,11 +724,11 @@ export class LoopService {
       return;
     }
     const candidates = agents.filter(
-      (agent) => activeSet.has(agent.agentId) && agent.memory.recent.length > 12,
+      (agent) => askedSet.has(agent.agentId) && agent.memory.recent.length > 12,
     );
     if (round % 4 === 0) {
       for (const agent of agents) {
-        if (activeSet.has(agent.agentId) && !candidates.includes(agent)) {
+        if (askedSet.has(agent.agentId) && !candidates.includes(agent)) {
           candidates.push(agent);
         }
       }
