@@ -50,6 +50,8 @@ function clampRounds(value: number): number {
   return Math.min(WORLD_MAX_ROUNDS, Math.max(WORLD_MIN_ROUNDS, Math.round(value)));
 }
 
+const ROUNDS_FIXED = WORLD_MIN_ROUNDS >= WORLD_MAX_ROUNDS;
+
 function WorldRow({ world }: { world: WorldRecord }) {
   return (
     <Link
@@ -439,7 +441,14 @@ export function WorldsPage() {
               </Field>
 
               <div className="grid grid-cols-2 gap-3">
-                <Field label="总轮次" hint={`${WORLD_MIN_ROUNDS}–${WORLD_MAX_ROUNDS} 轮`}>
+                <Field
+                  label="总轮次"
+                  hint={
+                    ROUNDS_FIXED
+                      ? `固定 ${WORLD_MIN_ROUNDS} 轮`
+                      : `${WORLD_MIN_ROUNDS}–${WORLD_MAX_ROUNDS} 轮`
+                  }
+                >
                   <input
                     className={`${inputClass} num`}
                     type="number"
@@ -447,6 +456,7 @@ export function WorldsPage() {
                     max={WORLD_MAX_ROUNDS}
                     step={1}
                     value={totalRounds}
+                    disabled={ROUNDS_FIXED}
                     onChange={(event) => {
                       const next = Number(event.target.value);
                       if (Number.isFinite(next)) setTotalRounds(next);

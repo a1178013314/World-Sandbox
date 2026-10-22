@@ -26,6 +26,7 @@ export const RawForgeSchema = z.object({
   name: z.string().trim().min(1),
   scene: z.string().trim().min(1),
   seedText: z.string().trim().min(1),
+  background: z.string().trim().optional(),
   timeSlots: z.array(z.string()).optional(),
   gateCoefficient: z.number().optional(),
   recommendedRounds: z.number().optional(),
@@ -138,6 +139,7 @@ export function buildPackFromModel(
     renderMode: "chat",
     seed: {
       text: seedText,
+      ...(raw.background?.trim() ? { background: raw.background.trim().slice(0, 160) } : {}),
       scene: raw.scene.trim().slice(0, 30),
       timeSlots,
       gateCoefficient: clamp(raw.gateCoefficient ?? 1, 0, 2),
@@ -171,7 +173,7 @@ export class PackForgeService {
     // 一次调用写完种子 + 角色，8 人以上会明显变慢且人物变薄。
     const castSize = clamp(Math.trunc(input.castSize ?? 8), 3, 8);
     const recommendedRounds = clamp(
-      Math.trunc(input.totalRounds ?? 12),
+      Math.trunc(input.totalRounds ?? WORLD_MIN_ROUNDS),
       WORLD_MIN_ROUNDS,
       WORLD_MAX_ROUNDS,
     );

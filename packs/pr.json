@@ -4,11 +4,12 @@
   "renderMode": "chat",
   "seed": {
     "text": "【某饮品品牌声明】\n近日有消费者反映饮用后出现不适。经初步核查，相关批次检测结果符合国家标准。\n我们已第一时间下架该批次产品，并配合监管部门调查。\n对恶意造谣者，保留追究法律责任的权利。\n—— 品牌公关部",
+    "background": "某饮品品牌被消费者投诉饮用后不适，相关批次已下架送检；品牌方在舆情压力下发布声明，群里正在逐句解读这份声明。",
     "scene": "饮品事件 · 公共讨论场",
     "timeSlots": ["08:00", "11:00", "14:00", "20:00", "23:00"],
     "gateCoefficient": 1.2
   },
-  "recommendedRounds": 10,
+  "recommendedRounds": 20,
   "initialCast": [
     {
       "id": "pin_pai_gong_guan",

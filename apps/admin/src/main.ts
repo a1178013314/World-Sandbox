@@ -5,6 +5,8 @@ import { AppLoggerService } from "./logger/app-logger.service";
 loadDotenv();
 
 const DEFAULT_PORT = 3001;
+/** 缺省监听全部网卡；部署在经代理转发的机器上时可设 HOST=127.0.0.1 收口 */
+const DEFAULT_HOST = "0.0.0.0";
 
 function parsePort(raw: string | undefined): number {
   if (!raw || raw.trim() === "") {
@@ -21,10 +23,12 @@ function parsePort(raw: string | undefined): number {
 
 async function main(): Promise<void> {
   const port = parsePort(process.env.PORT);
+  const host = process.env.HOST?.trim() || DEFAULT_HOST;
   const app = await bootstrapApp();
 
-  await app.listen(port);
+  await app.listen(port, host);
   app.get(AppLoggerService).info("admin 已启动", {
+    host,
     port,
     health: `http://localhost:${port}/api/health`,
     docs: `http://localhost:${port}/api/docs`,

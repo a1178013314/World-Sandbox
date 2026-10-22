@@ -22,7 +22,11 @@ export function buildForgePrompt(input: ForgePromptInput): string {
 只输出一个 JSON 对象，不要 markdown。
 
 [输出格式]
-{"name":"地点 · 事件","scene":"某某群","seedText":"【某某群】\\n第一句是事实摘要。\\n后面是群里能看到的东西。","timeSlots":["09:00","14:00","21:00"],"gateCoefficient":1,"recommendedRounds":12,"cast":[{"id":"agent_1","name":"王阿姨","role":"退休 · 12 年业主","goals":["先让物业把账贴出来"],"fears":["被邻居觉得小题大做"],"voice":"短句、爱反问，口头禅「账呢」，管年轻人叫「小姑娘」，绝不说「理解您的心情」","stance":{"issue":"物业费涨价","position":"oppose","intensity":0.9},"influence":0.8,"activity":{"level":0.85,"hours":[7,9,20,21]},"can_see":["本群消息","5 栋群转述"]}]}
+{"name":"地点 · 事件","scene":"某某群","seedText":"【某某群】\\n第一句是事实摘要。\\n后面是群里能看到的东西。","background":"一句话交代事件前情，40 字以内。","timeSlots":["09:00","14:00","21:00"],"gateCoefficient":1,"recommendedRounds":20,"cast":[{"id":"agent_1","name":"王阿姨","role":"退休 · 12 年业主","goals":["先让物业把账贴出来"],"fears":["被邻居觉得小题大做"],"voice":"短句、爱反问，口头禅「账呢」，管年轻人叫「小姑娘」，绝不说「理解您的心 情」","stance":{"issue":"物业费涨价","position":"oppose","intensity":0.9},"influence":0.8,"activity":{"level":0.85,"hours":[7,9,20,21]},"can_see":["本群消息","5 栋群转述"]}]}
+
+[事件背景 background]
+1. 用 40 字以内交代前情：谁对谁做了什么、为什么现在炸。
+2. 只给观看者看，不要写成角色台词，也不要重复 seedText 里的公告原文。
 
 [种子文本 seedText]
 1. 第一行写【场景 · 群名】。
@@ -35,7 +39,7 @@ export function buildForgePrompt(input: ForgePromptInput): string {
 1. name 用「地点 · 事件」，不超过 24 字；scene 是群名，不超过 20 字。
 2. timeSlots 给 3–4 个，每个都必须带 HH:MM（如 "09:00"、"次日 08:00"），否则排班识别不到。
 3. gateCoefficient 取 0.8–1.2：群越封闭、越难被外人看见，取越低。
-4. recommendedRounds 取 10–20。
+4. recommendedRounds 固定写 20。
 5. cast 给 ${input.castSize} 人，id 从 agent_1 开始；任意两人至少在身份利益、说话方式、信息盲区、在线时段、立场强度中的 3 项上不同。
 6. 角色位置要错开：当事人、利益相关方、执行者、旁观者、规则或权威方、靠话题吃饭的人。至少 1–2 人 activity.level ≤ 0.35；activity.hours 只从 timeSlots 的小时里选 2–3 个。
 7. 所有人 stance.issue 必须完全一致，是这场冲突的那一个问题（不超过 18 字）；position 只能是 support / oppose / neutral / procedural。

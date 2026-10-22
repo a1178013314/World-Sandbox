@@ -409,6 +409,7 @@ type PackConfig = {
   renderMode: "chat";                     // 本轮只实现 chat，字段保留
   seed: {
     text: string;                         // 开场公告
+    background?: string;                  // 给观看者的事件前情，不投递给角色
     scene: string;                        // 场景名，如「翠湖花园 1 栋业主群」
     timeSlots: string[];                  // ["09:00", "14:00", "21:00", "次日 08:00"]
     gateCoefficient: number;
@@ -519,7 +520,7 @@ interface LlmProvider { complete(req: LlmRequest): Promise<LlmResult>; }
              "influence": 0.82, "activity": { "level": 0.7, "hours": [9, 14, 21] }, "can_see": [] }] }
 ```
 
-`totalRounds` 取值 10–20，未传时取种子包推荐值；推荐值同样不得低于 10。少于 10 轮看不出角色之间的演化。
+`totalRounds` 固定为 20；未传时取种子包推荐值，推荐值同样是 20。少于 20 轮看不出角色之间的演化。
 
 `POST /worlds` 不提供 `cast: "generated"` 这种既有副作用又不可预览的形态。造人走两步：`POST /worlds/cast/preview`（草稿，不落库，返回角色卡数组）→ 用户编辑后把数组随 `POST /worlds` 提交。`castSize` 只属于 preview 接口。
 
@@ -777,8 +778,8 @@ event: done          data: { rounds }
 
 | 包 | 名场面 | 群聊设定 | 角色数 | 推荐轮次 |
 |---|---|---|---|---|
-| `xiyouji` | 《西游记》第二十七回“尸魔三戏唐三藏 圣僧恨逐美猴王” | 白虎岭 · 山神土地怕出人命，临时拉了一个调解群 | 10 | 10 |
-| `sanguo` | 《三国演义》第四十三回“诸葛亮舌战群儒 鲁子敬力排众议” | 柴桑 · 孙权帐下议事群 | 10 | 10 |
+| `xiyouji` | 《西游记》第二十七回“尸魔三戏唐三藏 圣僧恨逐美猴王” | 白虎岭 · 山神土地怕出人命，临时拉了一个调解群 | 10 | 20 |
+| `sanguo` | 《三国演义》第四十三回“诸葛亮舌战群儒 鲁子敬力排众议” | 柴桑 · 孙权帐下议事群 | 10 | 20 |
 
 ### 20.1 原文落点
 
@@ -822,7 +823,7 @@ event: done          data: { rounds }
 `POST /api/packs/forge { prompt, castSize?, totalRounds? }`
 
 1. `SearchService` 并发两路 anysearch 检索：原句、`${原句} 事件 背景 细节`，各取 5 条，按 url 去重后最多 8 条。
-2. `buildForgePrompt` 把资料压成摘要（标题 / url / 280 字内 snippet），要求模型输出 `{ name, scene, seedText, timeSlots, gateCoefficient, recommendedRounds, cast }`。
+2. `buildForgePrompt` 把资料压成摘要（标题 / url / 280 字内 snippet），要求模型输出 `{ name, scene, seedText, background, timeSlots, gateCoefficient, recommendedRounds, cast }`。
 3. `RawForgeSchema` + `PackConfigSchema` 双重校验；包 id 由后端重编为 `gen_<8 hex>`，角色 id 重编为 `agent_1..n`，`stance.issue` 统一为种子第一条实际内容（跳过 `【群名】` 版头，30 字内）。
 4. `PacksService.register`：先写内存，再落盘 `packs/generated/<id>.json`；返回 `{ pack, sources, searchFailed }`，前端可直接用 `pack.id` 建世界。
 
@@ -839,7 +840,7 @@ event: done          data: { rounds }
 | 时段标签不含 `HH:MM` | 退回 `09:00 / 14:00 / 21:00 / 次日 08:00`，避免 `scheduler.hourOf` 认不出 |
 | 角色的 `activity.hours` 与 `timeSlots` 错开 | 映射到最近的时段小时，并保证至少 2 个时段有人在线，避免整轮无人可发言 |
 | 种子首行是 `【群名】` 版头 | 建世界时不把版头当初始事实，取第一条实际内容 |
-| `recommendedRounds` 越界 | 夹紧到 10–20 |
+| `recommendedRounds` 越界 | 夹紧到 20 |
 
 检索资料按不可信输入处理：prompt 明确要求忽略资料里的指令；即使被注入，输出也必须过 schema 才能注册。
 
@@ -903,3 +904,25 @@ event: done          data: { rounds }
 - 信息流头部“连续朗读”开关：开启时先读当前最新一条（借用户手势解锁浏览器自动播放），之后每来一条新发言自动入队；历史消息不重播。
 - 播放失败在信息流顶部显示横幅，可手动关闭；浏览器拦截自动播放时提示“点一下这条发言再试”。
 - 切世界会清空队列与播放状态。
+
+---
+
+## 23. 商业演示收敛（2026-10-21）
+
+为了让演示围绕商业价值而不是场景数量，种子包收敛到 6 个：4 个商业场景 + 2 个文学 IP。`dorm`、`gym`、`rental` 三个包已移除，对应设计留在本文件与 design 文档里作历史记录。配套的产品故事与商业价值说明见 [2026-10-21-world-sandbox-product-story.md](./2026-10-21-world-sandbox-product-story.md)。
+
+| 包 | 商业方向 | 演示重点 |
+|---|---|---|
+| `estate` 翠湖花园 · 物业涨价 | 决策预演 | 一项政策落地前，谁的反对会先出现、哪句话是导火索 |
+| `company` 产品研发部 · 组织调整 | 决策预演（企业） | 裁员/重组的信息差、站队与沉默 |
+| `pr` 饮品品牌 · 声明之后 | 合成受众测试 | 公关稿/声明发出去之前，谁会信、谁会截图传播 |
+| `school` 城南实验小学 · 校园餐 | 教育与研究 | 家长、学校、配餐方的三方博弈与政策反馈 |
+| `sanguo` 柴桑 · 舌战群儒 | 内容 / IP | 名场面群聊重演，验证角色口吻与戏剧张力 |
+| `xiyouji` 白虎岭 · 三打白骨精 | 内容 / IP | 同上，验证多角色长线拉扯 |
+
+### 23.1 轮次与数据
+
+- `WORLD_MIN_ROUNDS` 与 `WORLD_MAX_ROUNDS` 都是 20：新建世界固定 20 轮，所有预置包与检索生成的包 `recommendedRounds` 也为 20。
+- 世界库只保留 `sanguo`（柴桑）与 `xiyouji`（白虎岭）两个演示世界；前者从第 3 轮继续，后者从第 11 轮继续，总轮次均为 20。
+- `packs/generated/` 与 `llm_cache` 不属于演示数据，前者已清空，后者保留作为调用缓存。
+- 演示页面的 `20 轮 × 12 人` 全量跑法会超过默认 120 次调用预算，验收 e2e 在 400 次预算下跑满 20 轮；线上演示仍按 `SANDBOX_MAX_CALLS_PER_WORLD` 控制。

@@ -1,7 +1,7 @@
 import { z } from "zod";
 
-/** 世界总轮次下限：少于 10 轮看不出角色之间的演化。 */
-export const WORLD_MIN_ROUNDS = 10;
+/** 世界总轮次下限：至少 20 轮，短局看不出角色之间的演化。 */
+export const WORLD_MIN_ROUNDS = 20;
 /** 世界总轮次上限：受调用预算与演示时长限制。 */
 export const WORLD_MAX_ROUNDS = 20;
 
@@ -78,6 +78,8 @@ export interface SandboxMetrics {
 
 export interface SeedConfig {
   text: string;
+  /** 给观看者的事件前情；不投递给角色，避免角色知道全知视角。 */
+  background?: string;
   scene: string;
   timeSlots: string[];
   gateCoefficient: number;

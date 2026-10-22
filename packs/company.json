@@ -4,11 +4,12 @@
   "renderMode": "chat",
   "seed": {
     "text": "【产品研发部 · 全员群】\n各位：受组织架构调整影响，本周五前请各组长提交本组成员去留建议。\nQ4 绩效名单下周公布，请大家正常推进手头项目。\n—— HRBP 林",
+    "background": "产品研发部面临组织架构调整，HRBP 要求各组长本周五前提交组员去留建议；Q4 绩效名单下周公布，群里还没人知道标准。",
     "scene": "产品研发部 · 全员群",
     "timeSlots": ["09:30", "12:00", "15:00", "20:00"],
     "gateCoefficient": 0.7
   },
-  "recommendedRounds": 10,
+  "recommendedRounds": 20,
   "initialCast": [
     {
       "id": "bu_men_zong_jian",

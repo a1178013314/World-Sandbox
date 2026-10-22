@@ -27,14 +27,14 @@ describe("一句话生成种子包 e2e", () => {
   it("没有外网也能生成包，并可立刻用它建世界", async () => {
     const forged = await request(app.getHttpServer())
       .post("/api/packs/forge")
-      .send({ prompt: "小区物业费从 2.8 涨到 3.8，业主群吵起来了", castSize: 6, totalRounds: 10 })
+      .send({ prompt: "小区物业费从 2.8 涨到 3.8，业主群吵起来了", castSize: 6, totalRounds: 20 })
       .expect(201);
     const result = forged.body as ForgePackResult;
 
     expect(result.pack.id).toMatch(/^gen_[0-9a-f]{8}$/);
     expect(result.pack.initialCast).toHaveLength(6);
     expect(result.pack.seed.timeSlots.length).toBeGreaterThanOrEqual(2);
-    expect(result.pack.recommendedRounds).toBe(10);
+    expect(result.pack.recommendedRounds).toBe(20);
     expect(result.searchFailed).toBe(false);
     expect(result.sources).toEqual([]);
     expect(readdirSync(join(packsDir, "generated"))).toHaveLength(1);
@@ -49,7 +49,7 @@ describe("一句话生成种子包 e2e", () => {
 
     const created = await request(app.getHttpServer())
       .post("/api/worlds")
-      .send({ packId: result.pack.id, cast: "preset", totalRounds: 10 })
+      .send({ packId: result.pack.id, cast: "preset", totalRounds: 20 })
       .expect(201);
     const snapshot = await request(app.getHttpServer())
       .get(`/api/worlds/${created.body.id}`)

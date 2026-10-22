@@ -23,14 +23,22 @@ async function waitDone(app: INestApplication, worldId: string, timeoutMs = 30_0
 
 describe("世界沙盘 e2e", () => {
   let app: INestApplication;
+  const previousBudget = process.env.SANDBOX_MAX_CALLS_PER_WORLD;
 
   beforeAll(async () => {
+    // 20 轮 × 12 人会超过默认 120 次预算，测试里放宽到 400。
+    process.env.SANDBOX_MAX_CALLS_PER_WORLD = "400";
     app = await bootstrapApp();
     await app.init();
   });
 
   afterAll(async () => {
     await app.close();
+    if (previousBudget === undefined) {
+      delete process.env.SANDBOX_MAX_CALLS_PER_WORLD;
+    } else {
+      process.env.SANDBOX_MAX_CALLS_PER_WORLD = previousBudget;
+    }
   });
 
   it("包、世界、轮次、注入、分叉、采访全链路成立", async () => {
@@ -39,7 +47,7 @@ describe("世界沙盘 e2e", () => {
 
     const created = await request(app.getHttpServer())
       .post("/api/worlds")
-      .send({ packId: "estate", cast: "preset", totalRounds: 10 })
+      .send({ packId: "estate", cast: "preset", totalRounds: 20 })
       .expect(201);
     const worldId = created.body.id as string;
 
@@ -53,8 +61,8 @@ describe("世界沙盘 e2e", () => {
     const snapshot = await waitDone(app, worldId);
 
     expect(snapshot.world.status).toBe("done");
-    expect(snapshot.world.currentRound).toBe(10);
-    expect(snapshot.rounds).toHaveLength(10);
+    expect(snapshot.world.currentRound).toBe(20);
+    expect(snapshot.rounds).toHaveLength(20);
     for (const round of snapshot.rounds) {
       expect(round.spokeIds.every((id) => round.activeIds.includes(id))).toBe(true);
       expect(round.gatedIds.every((id) => !round.spokeIds.includes(id))).toBe(true);
@@ -131,7 +139,7 @@ describe("世界沙盘 e2e", () => {
   it("分段 run 结束后回到 ready，可以继续跑下一段", async () => {
     const created = await request(app.getHttpServer())
       .post("/api/worlds")
-      .send({ packId: "estate", cast: "preset", totalRounds: 10 })
+      .send({ packId: "estate", cast: "preset", totalRounds: 20 })
       .expect(201);
     const worldId = created.body.id as string;
 
@@ -155,13 +163,13 @@ describe("世界沙盘 e2e", () => {
     await request(app.getHttpServer()).post(`/api/worlds/${worldId}/run`).send({}).expect(201);
     const finished = await waitDone(app, worldId);
     expect(finished.world.status).toBe("done");
-    expect(finished.world.currentRound).toBe(10);
+    expect(finished.world.currentRound).toBe(20);
   });
 
   it("同一世界重复 run 返回 409，done 后 run 返回 400", async () => {
     const created = await request(app.getHttpServer())
       .post("/api/worlds")
-      .send({ packId: "estate", cast: "preset", totalRounds: 10 })
+      .send({ packId: "estate", cast: "preset", totalRounds: 20 })
       .expect(201);
     await request(app.getHttpServer())
       .post(`/api/worlds/${created.body.id}/run`)

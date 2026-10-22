@@ -78,8 +78,11 @@ function readStream(
 describe("世界沙盘验收 e2e", () => {
   let app: INestApplication;
   let port = 0;
+  const previousBudget = process.env.SANDBOX_MAX_CALLS_PER_WORLD;
 
   beforeAll(async () => {
+    // 20 轮 × 12 人会超过演示默认的 120 次预算，这里放宽到 400 只验证轮次与门控。
+    process.env.SANDBOX_MAX_CALLS_PER_WORLD = "400";
     app = await bootstrapApp();
     await app.listen(0);
     const address = app.getHttpServer().address();
@@ -91,27 +94,37 @@ describe("世界沙盘验收 e2e", () => {
 
   afterAll(async () => {
     await app.close();
+    if (previousBudget === undefined) {
+      delete process.env.SANDBOX_MAX_CALLS_PER_WORLD;
+    } else {
+      process.env.SANDBOX_MAX_CALLS_PER_WORLD = previousBudget;
+    }
   });
 
-  it("10 轮跑满且不超预算，门拦与在场沉默可区分", async () => {
+  it("20 轮跑满且不超预算，门拦与在场沉默可区分", async () => {
     const created = await request(app.getHttpServer())
       .post("/api/worlds")
-      .send({ packId: "estate", cast: "preset", totalRounds: 10 })
+      .send({ packId: "estate", cast: "preset", totalRounds: 20 })
       .expect(201);
     const worldId = created.body.id as string;
 
     const startedAt = Date.now();
     await request(app.getHttpServer()).post(`/api/worlds/${worldId}/run`).send({}).expect(201);
-    const snapshot = await waitFor(app, worldId, (current) => current.world.status === "done");
-    expect(Date.now() - startedAt).toBeLessThan(120_000);
+    const snapshot = await waitFor(
+      app,
+      worldId,
+      (current) => current.world.status === "done",
+      240_000,
+    );
+    expect(Date.now() - startedAt).toBeLessThan(240_000);
 
-    expect(snapshot.rounds).toHaveLength(10);
-    expect(snapshot.world.currentRound).toBe(10);
+    expect(snapshot.rounds).toHaveLength(20);
+    expect(snapshot.world.currentRound).toBe(20);
     const callsResponse = await request(app.getHttpServer())
       .get(`/api/worlds/${worldId}/calls`)
       .query({ pageSize: 1 })
       .expect(200);
-    expect(callsResponse.body.total).toBeLessThanOrEqual(120);
+    expect(callsResponse.body.total).toBeLessThanOrEqual(400);
 
     const calls = app.get<Repository<CallEntity>>(getRepositoryToken(CallEntity));
     const rows = await calls.find({ where: { worldId } });
@@ -151,7 +164,7 @@ describe("世界沙盘验收 e2e", () => {
   it("导出后导入可完整回放，离线采访不引用该轮", async () => {
     const created = await request(app.getHttpServer())
       .post("/api/worlds")
-      .send({ packId: "estate", cast: "preset", totalRounds: 10 })
+      .send({ packId: "estate", cast: "preset", totalRounds: 20 })
       .expect(201);
     const sourceId = created.body.id as string;
     await request(app.getHttpServer()).post(`/api/worlds/${sourceId}/run`).send({}).expect(201);
@@ -167,8 +180,8 @@ describe("世界沙盘验收 e2e", () => {
     const importedId = imported.body.id as string;
     const replay = await snapshotOf(app, importedId);
     expect(replay.world.status).toBe("done");
-    expect(replay.world.currentRound).toBe(10);
-    expect(replay.rounds).toHaveLength(10);
+    expect(replay.world.currentRound).toBe(source.world.currentRound);
+    expect(replay.rounds).toHaveLength(source.rounds.length);
     expect(replay.agents).toHaveLength(source.agents.length);
 
     const shape = (
@@ -187,7 +200,10 @@ describe("世界沙盘验收 e2e", () => {
     expect(offline).toBeDefined();
     const interview = await request(app.getHttpServer())
       .post(`/api/worlds/${importedId}/interview`)
-      .send({ agentId: offline?.agentId, question: "第 10 轮群里都说了什么？" })
+      .send({
+        agentId: offline?.agentId,
+        question: `第 ${lastRound?.round ?? 0} 轮群里都说了什么？`,
+      })
       .expect(201);
     expect(typeof interview.body.answer).toBe("string");
     expect(interview.body.cited).toEqual([]);
@@ -196,7 +212,7 @@ describe("世界沙盘验收 e2e", () => {
   it("SSE 首帧是 snapshot，Last-Event-ID 之后的补发与 DB 一致", async () => {
     const created = await request(app.getHttpServer())
       .post("/api/worlds")
-      .send({ packId: "estate", cast: "preset", totalRounds: 10 })
+      .send({ packId: "estate", cast: "preset", totalRounds: 20 })
       .expect(201);
     const worldId = created.body.id as string;
     await request(app.getHttpServer()).post(`/api/worlds/${worldId}/run`).send({}).expect(201);

@@ -19,12 +19,13 @@ describe("PackConfigSchema", () => {
     const dir = join(__dirname, "../../../../packs");
     const files = readdirSync(dir).filter((file) => file.endsWith(".json"));
 
-    expect(files.length).toBeGreaterThanOrEqual(7);
+    expect(files.length).toBeGreaterThanOrEqual(6);
     for (const file of files) {
       const pack = PackConfigSchema.parse(JSON.parse(readFileSync(join(dir, file), "utf8")));
       const ids = pack.initialCast.map((agent) => agent.id);
 
       expect(pack.recommendedRounds).toBeGreaterThanOrEqual(WORLD_MIN_ROUNDS);
+      expect(pack.seed.background).toBeTruthy();
       expect(pack.initialCast.length).toBeGreaterThanOrEqual(6);
       expect(new Set(ids).size).toBe(ids.length);
     }

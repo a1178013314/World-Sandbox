@@ -97,6 +97,17 @@ export function WorldHeader({
               {world.currentRound} / {world.totalRounds} 轮
             </span>
           </div>
+          {world.seed.background ? (
+            <p className="mt-2.5 flex max-w-[76ch] gap-2 border-l border-amber/25 pl-3 text-[11px] leading-6 text-paper-muted">
+              <span
+                className="shrink-0 pt-px text-[10px] uppercase tracking-[0.16em] text-amber/70"
+                title="给观看者的背景说明，不会投递给角色"
+              >
+                事件背景
+              </span>
+              <span>{world.seed.background}</span>
+            </p>
+          ) : null}
           <details className="group mt-2 max-w-[70ch]">
             <summary className="cursor-pointer list-none text-[10px] uppercase tracking-[0.16em] text-paper-muted/60 transition-colors hover:text-paper-muted">
               展开种子原文

@@ -16,6 +16,7 @@ const modelOutput = {
   scene: "城西小区业主群",
   seedText:
     "城西小区物业通知下月起物业费由 2.8 元涨到 3.8 元。\n【城西小区业主群】\n有人贴出通知截图，落款日期对不上。\n（业主群，说话短。）",
+  background: "城西小区物业突然宣布涨价，通知刚贴进业主群。",
   timeSlots: ["早上", "09:00", "21:00"],
   gateCoefficient: 5,
   recommendedRounds: 3,
@@ -29,8 +30,9 @@ describe("buildPackFromModel", () => {
     expect(pack.id).toMatch(/^gen_[0-9a-f]{8}$/);
     expect(pack.name).toBe("城西小区 · 物业费争议");
     expect(pack.seed.timeSlots).toEqual(["09:00", "21:00"]);
+    expect(pack.seed.background).toBe("城西小区物业突然宣布涨价，通知刚贴进业主群。");
     expect(pack.seed.gateCoefficient).toBe(2);
-    expect(pack.recommendedRounds).toBe(10);
+    expect(pack.recommendedRounds).toBe(20);
     expect(pack.initialCast.map((agent) => agent.id)).toEqual(["agent_1", "agent_2", "agent_3"]);
     expect(new Set(pack.initialCast.map((agent) => agent.stance.issue)).size).toBe(1);
     expect(pack.initialCast[0]?.stance.issue).toBe(

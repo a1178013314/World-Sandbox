@@ -26,7 +26,7 @@ describe("调用预算闸门", () => {
   it("超过上限时停轮并写入 error_text", async () => {
     const created = await request(app.getHttpServer())
       .post("/api/worlds")
-      .send({ packId: "estate", cast: "preset", totalRounds: 10 })
+      .send({ packId: "estate", cast: "preset", totalRounds: 20 })
       .expect(201);
     await request(app.getHttpServer())
       .post(`/api/worlds/${created.body.id}/run`)

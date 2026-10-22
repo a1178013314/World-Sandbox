@@ -7,6 +7,7 @@ export const PackConfigSchema = z.object({
   renderMode: z.literal("chat"),
   seed: z.object({
     text: z.string().trim().min(1),
+    background: z.string().trim().min(1).max(160).optional(),
     scene: z.string().trim().min(1),
     timeSlots: z.array(z.string().trim().min(1)).min(1),
     gateCoefficient: z.number().min(0).max(2),

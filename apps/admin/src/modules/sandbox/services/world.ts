@@ -215,6 +215,8 @@ export class WorldService {
     const profiles = this.resolveCast(input.cast, pack, seedText);
     const seed: SeedConfig = {
       text: seedText,
+      // 自定义种子没有对应的事件前情；只有整包创建时才带观看者背景。
+      background: input.seedText?.trim() ? undefined : pack?.seed.background,
       scene: pack?.seed.scene ?? "自定义场景",
       timeSlots: pack?.seed.timeSlots ?? ["09:00", "14:00", "21:00", "次日 08:00"],
       gateCoefficient: pack?.seed.gateCoefficient ?? 1,

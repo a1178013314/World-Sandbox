@@ -7,6 +7,7 @@ import Joi from "joi";
 export const envValidationSchema = Joi.object({
   NODE_ENV: Joi.string().valid("development", "test", "production").required(),
   PORT: Joi.number().integer().min(1).max(65535).default(3001),
+  HOST: Joi.string().trim().optional(),
   DB_PATH: Joi.string().trim().min(1).optional(),
   LOG_LEVEL: Joi.string().valid("trace", "debug", "info", "warn", "error", "fatal").default("info"),
   SANDBOX_LLM_PROVIDER: Joi.string().valid("openai", "fake").default("openai"),
